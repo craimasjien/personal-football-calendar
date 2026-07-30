@@ -1,7 +1,7 @@
 # personal-football-calendar
 
 Publishes a Dutch `.ics` feed of the football matches I want to watch, rebuilt
-weekly by GitHub Actions and served from GitHub Pages.
+hourly by GitHub Actions and served from GitHub Pages.
 
 Matches I will definitely watch appear as-is. Matches I would like to watch are
 prefixed `Optioneel:`.

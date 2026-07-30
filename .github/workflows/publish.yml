@@ -2,9 +2,10 @@ name: Publish calendar
 
 on:
   schedule:
-    # Mondays at 06:00 UTC. A daily run costs nothing — the source has no quota —
-    # and would catch TV-driven kickoff changes sooner. Change to '0 6 * * *'.
-    - cron: '0 6 * * 1'
+    # Hourly. Costs nothing — the source has no quota — and picks up TV-driven
+    # kickoff changes within the hour. GitHub delays or drops scheduled runs
+    # under load, so treat the cadence as best-effort, not guaranteed.
+    - cron: '0 * * * *'
   workflow_dispatch:
   push:
     branches: [main]
