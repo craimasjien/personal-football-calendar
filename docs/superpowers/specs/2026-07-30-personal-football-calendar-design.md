@@ -24,6 +24,10 @@ watch, using an `Optioneel:` prefix on the latter. Content is in Dutch.
 **In scope:** fixture selection, Dutch-language ICS generation, weekly automated
 publication to a URL two iPhones can subscribe to.
 
+Ten competitions are covered: the Eredivisie, KNVB Beker, Johan Cruijff Schaal, pre-season
+friendlies, the three UEFA competitions, and — separately, because ESPN files them under their own
+league codes — the three UEFA qualifying competitions.
+
 **Out of scope:** TV broadcaster information (considered and deliberately dropped —
 fixture APIs do not carry broadcast rights, and every way of obtaining it added either a
 fragile scraper or a config file of facts that go stale). Match results, standings, form,
@@ -202,11 +206,18 @@ every slug we recognise the mapping is identity rather than translation:
 ```ts
 const STAGES = [
   'regular-season', 'league-phase',           // no knockout meaning
-  'first-round', 'second-round',              // domestic cup early rounds
-  'knockout-round-playoffs',                  // UEFA play-off round
+  'first-round', 'second-round',              // domestic cup + UEFA qualifying early rounds
+  'third-round', 'playoff-round',             // UEFA qualifying, July/August
+  'knockout-round-playoffs',                  // main competition play-off, February
   'round-of-16', 'quarterfinals', 'semifinals', 'final',
 ] as const
 ```
+
+`playoff-round` (UEFA qualifying, August) and `knockout-round-playoffs` (the main competition's
+February play-off) are genuinely different rounds and must not be merged. `first-round` and
+`second-round` are shared between the KNVB Beker and UEFA qualifying; one Dutch label serves both,
+because the competition name already disambiguates — `UEFA Conference League kwalificatie · Tweede
+ronde` is unambiguous.
 
 Rule 3's threshold test is therefore
 `STAGES.indexOf(stage) >= STAGES.indexOf(config.bigEuropeanStageFrom)`.
@@ -296,13 +307,41 @@ ESPN's public soccer API, unauthenticated:
 https://site.api.espn.com/apis/site/v2/sports/soccer/<code>/scoreboard?dates=<from>-<to>&limit=1000
 ```
 
-| Competition | ESPN code |
-|---|---|
-| Eredivisie | `ned.1` |
-| KNVB Beker | `ned.cup` |
-| Champions League | `uefa.champions` |
-| Europa League | `uefa.europa` |
-| Conference League | `uefa.europa.conf` |
+| Competition | ESPN code | European? |
+|---|---|---|
+| Eredivisie | `ned.1` | no |
+| KNVB Beker | `ned.cup` | no |
+| Johan Cruijff Schaal | `ned.supercup` | no |
+| Oefenwedstrijden (friendlies) | `club.friendly` | no |
+| Champions League | `uefa.champions` | yes |
+| Europa League | `uefa.europa` | yes |
+| Conference League | `uefa.europa.conf` | yes |
+| Champions League kwalificatie | `uefa.champions_qual` | yes |
+| Europa League kwalificatie | `uefa.europa_qual` | yes |
+| Conference League kwalificatie | `uefa.europa.conf_qual` | yes |
+
+**Ten competitions [revised 2026-07-30].** The original five missed two things.
+
+**UEFA qualifying rounds live under entirely separate ESPN league codes** — `uefa.europa.conf_qual`
+and siblings — not under the main competition. This is the single least obvious fact about this data
+source, and it broke the owner's hardest requirement: on 30 July 2026 Ajax's Conference League
+qualifying second-leg tie against Vojvodina, played that evening, was absent from the calendar. "All
+Ajax's international matches, no exceptions" cannot be satisfied without these three codes.
+
+The qualifying competitions are classified as **European**, which is what makes rule 1 cover them.
+That matters: a qualifier is exactly the kind of tie that a stage-threshold rule would exclude, since
+qualifying rounds sit far below the quarter-finals. Rule 1 ignores stage entirely, so it is the only
+reason these appear.
+
+Conversely, the ~150–400 *non*-Ajax qualifying ties per season must not flood the calendar, and do
+not: every qualifying round sorts below `bigEuropeanStageFrom`, so rule 3c cannot admit them, and no
+qualifying round is a `final`, so 3b cannot either. Measured: 406 Conference League qualifying events
+fetched, 2 admitted — Ajax's own.
+
+**The Johan Cruijff Schaal and friendlies** are not European, so they take the domestic path: rule 2
+for Ajax matches (required or Optional by opponent tier), and excluded otherwise, because rule 4 is
+Eredivisie-only. That last detail is deliberate — the 2026 Johan Cruijff Schaal is PSV against AZ,
+two clubs the owner rates, and it is correctly excluded because Ajax is not in it.
 
 Chosen because it is the only free source covering all five required competitions for the
 **current and upcoming** seasons. It needs no API key, no account, and has no request quota,

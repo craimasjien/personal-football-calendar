@@ -45,7 +45,7 @@ export const rawConfig: RawConfig = {
 
   /** ESPN's names are not always what should appear in the calendar. */
   displayNames: {
-    'Ajax Amsterdam': 'AFC Ajax',
+    'Ajax Amsterdam': 'Ajax',
     'Feyenoord Rotterdam': 'Feyenoord',
     'AZ Alkmaar': 'AZ',
     'PSV Eindhoven': 'PSV',
