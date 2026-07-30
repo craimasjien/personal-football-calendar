@@ -29,11 +29,22 @@ export function classify(fixture: Fixture, config: ResolvedConfig): Inclusion {
     return notable ? 'required' : 'optional'
   }
 
-  // Rule 3 — big European matches: a late stage, or two elite clubs.
+  // Rule 3 — big European matches. Three parts; see the spec for why.
   if (european) {
-    const lateStage = atOrBeyond(stage, config.bigEuropeanStageFrom)
-    const bothElite = config.europeElite.has(home.id) && config.europeElite.has(away.id)
-    return lateStage || bothElite ? 'optional' : 'excluded'
+    const eliteCount =
+      (config.europeElite.has(home.id) ? 1 : 0) + (config.europeElite.has(away.id) ? 1 : 0)
+
+    // 3a — two elite clubs are a big night at any stage, league phase included.
+    if (eliteCount === 2) return 'optional'
+
+    // 3b — a European final is a European final, in all three competitions.
+    if (stage === 'final') return 'optional'
+
+    // 3c — a late round needs at least one elite club. Without this the threshold
+    // admits Europa/Conference quarter-finals between clubs nobody asked about.
+    if (atOrBeyond(stage, config.bigEuropeanStageFrom) && eliteCount >= 1) return 'optional'
+
+    return 'excluded'
   }
 
   // Rule 4 — big Eredivisie matches: both clubs tier 1.

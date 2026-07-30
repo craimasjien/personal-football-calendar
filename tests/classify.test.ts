@@ -89,26 +89,51 @@ describe('classify — rule 2: Ajax domestically depends on the opponent tier', 
   })
 })
 
+// Rule 3 change (owner-approved, post Task 7): a non-elite pairing below the
+// final is EXCLUDED even at or beyond the stage threshold — it now takes at
+// least one elite club to admit a late-stage match. Do not "restore" the old
+// behaviour of admitting any late-stage match regardless of who's playing;
+// that was the exact defect the owner flagged (28 Optional entries with no
+// elite club on either side).
 describe('classify — rule 3: big European matches without Ajax', () => {
-  it('marks a quarter-final between two non-elite clubs optional', () => {
-    expect(classify(fixture('ucl', SLAVIA, BODO, 'quarterfinals'), CONFIG)).toBe('optional')
+  it('marks a league-phase match between two elite clubs optional (3a)', () => {
+    expect(classify(fixture('ucl', BARCELONA, UNITED, 'league-phase'), CONFIG)).toBe('optional')
+  })
+
+  it('marks a quarter-final between two elite clubs optional', () => {
+    expect(classify(fixture('ucl', BARCELONA, UNITED, 'quarterfinals'), CONFIG)).toBe('optional')
+  })
+
+  it('excludes a quarter-final between two non-elite clubs (behaviour change from Task 7)', () => {
+    expect(classify(fixture('ucl', SLAVIA, BODO, 'quarterfinals'), CONFIG)).toBe('excluded')
+  })
+
+  it('excludes a semi-final between two non-elite clubs', () => {
+    expect(classify(fixture('ucl', SLAVIA, BODO, 'semifinals'), CONFIG)).toBe('excluded')
+  })
+
+  it('marks a final between two non-elite clubs optional (3b)', () => {
+    expect(classify(fixture('ucl', SLAVIA, BODO, 'final'), CONFIG)).toBe('optional')
+  })
+
+  it('marks a quarter-final optional with one elite club, elite at home (3c)', () => {
+    expect(classify(fixture('ucl', BARCELONA, BODO, 'quarterfinals'), CONFIG)).toBe('optional')
+  })
+
+  it('marks a quarter-final optional with one elite club, elite away (3c)', () => {
+    expect(classify(fixture('ucl', BODO, BARCELONA, 'quarterfinals'), CONFIG)).toBe('optional')
+  })
+
+  it('excludes one elite club at round-of-16, below the threshold', () => {
+    expect(classify(fixture('ucl', BARCELONA, BODO, 'round-of-16'), CONFIG)).toBe('excluded')
+  })
+
+  it('excludes one elite club in the league phase', () => {
+    expect(classify(fixture('ucl', BARCELONA, BODO, 'league-phase'), CONFIG)).toBe('excluded')
   })
 
   it('excludes those same clubs in the league phase', () => {
     expect(classify(fixture('ucl', SLAVIA, BODO, 'league-phase'), CONFIG)).toBe('excluded')
-  })
-
-  it('marks a league-phase match between two elite clubs optional', () => {
-    expect(classify(fixture('ucl', BARCELONA, UNITED, 'league-phase'), CONFIG)).toBe('optional')
-  })
-
-  it('excludes an elite club against a non-elite club before the quarter-finals', () => {
-    expect(classify(fixture('ucl', BARCELONA, BODO, 'league-phase'), CONFIG)).toBe('excluded')
-  })
-
-  it('includes every stage at or beyond the threshold', () => {
-    expect(classify(fixture('ucl', SLAVIA, BODO, 'semifinals'), CONFIG)).toBe('optional')
-    expect(classify(fixture('ucl', SLAVIA, BODO, 'final'), CONFIG)).toBe('optional')
   })
 
   it('excludes stages below the threshold', () => {
@@ -118,10 +143,16 @@ describe('classify — rule 3: big European matches without Ajax', () => {
     ).toBe('excluded')
   })
 
+  it('marks a final between two non-elite clubs optional in all three competitions (3b)', () => {
+    expect(classify(fixture('ucl', SLAVIA, BODO, 'final'), CONFIG)).toBe('optional')
+    expect(classify(fixture('uel', SLAVIA, BODO, 'final'), CONFIG)).toBe('optional')
+    expect(classify(fixture('uecl', SLAVIA, BODO, 'final'), CONFIG)).toBe('optional')
+  })
+
   it('respects a raised threshold', () => {
     const semisOnly: ResolvedConfig = { ...CONFIG, bigEuropeanStageFrom: 'semifinals' }
-    expect(classify(fixture('ucl', SLAVIA, BODO, 'quarterfinals'), semisOnly)).toBe('excluded')
-    expect(classify(fixture('ucl', SLAVIA, BODO, 'semifinals'), semisOnly)).toBe('optional')
+    expect(classify(fixture('ucl', BARCELONA, BODO, 'quarterfinals'), semisOnly)).toBe('excluded')
+    expect(classify(fixture('ucl', BARCELONA, BODO, 'semifinals'), semisOnly)).toBe('optional')
   })
 
   it('excludes a non-elite home side against an elite away side before the threshold', () => {
