@@ -1,4 +1,3 @@
-import { existsSync } from 'node:fs'
 import { describe, expect, it, vi } from 'vitest'
 
 describe('src/main.ts', () => {
@@ -7,8 +6,12 @@ describe('src/main.ts', () => {
     vi.stubGlobal('fetch', fetchMock)
     const mod = await import('../src/main.ts')
     expect(typeof mod.run).toBe('function')
+    // "No import side effects" is fully carried by the fetch assertion above.
+    // Deliberately not asserting `dist/` is absent: it is gitignored but persists
+    // on disk once `npm run build:calendar` has been run locally (as the README
+    // documents), which would make every later `npm test` fail on an assertion
+    // unrelated to the property this test names.
     expect(fetchMock).not.toHaveBeenCalled()
-    expect(existsSync('dist')).toBe(false)
     vi.unstubAllGlobals()
   })
 })

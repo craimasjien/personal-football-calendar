@@ -23,41 +23,89 @@ describe('assertPublishable', () => {
   it('passes when my team has fixtures and the calendar has events', () => {
     const f = fixture(AJAX, 142)
     expect(() =>
-      assertPublishable({ fixtures: [f], entries: [entry(f)], myTeamId: AJAX }),
+      assertPublishable({ fixtures: [f], entries: [entry(f)], myTeamId: AJAX, counts: [] }),
     ).not.toThrow()
   })
 
   it('refuses when my team has no fixtures at all', () => {
     const f = fixture(148, 142)
     expect(() =>
-      assertPublishable({ fixtures: [f], entries: [entry(f)], myTeamId: AJAX }),
+      assertPublishable({ fixtures: [f], entries: [entry(f)], myTeamId: AJAX, counts: [] }),
     ).toThrow(GuardError)
   })
 
   it('explains why it refused when my team is missing', () => {
     const f = fixture(148, 142)
     expect(() =>
-      assertPublishable({ fixtures: [f], entries: [entry(f)], myTeamId: AJAX }),
+      assertPublishable({ fixtures: [f], entries: [entry(f)], myTeamId: AJAX, counts: [] }),
     ).toThrow(/no fixtures/i)
   })
 
   it('refuses when the calendar would be empty', () => {
     const f = fixture(AJAX, 142)
-    expect(() => assertPublishable({ fixtures: [f], entries: [], myTeamId: AJAX })).toThrow(
-      GuardError,
-    )
+    expect(() =>
+      assertPublishable({ fixtures: [f], entries: [], myTeamId: AJAX, counts: [] }),
+    ).toThrow(GuardError)
   })
 
   it('refuses when there is no data at all', () => {
-    expect(() => assertPublishable({ fixtures: [], entries: [], myTeamId: AJAX })).toThrow(
-      GuardError,
-    )
+    expect(() =>
+      assertPublishable({ fixtures: [], entries: [], myTeamId: AJAX, counts: [] }),
+    ).toThrow(GuardError)
   })
 
   it('counts my team whether at home or away', () => {
     const away = fixture(142, AJAX)
     expect(() =>
-      assertPublishable({ fixtures: [away], entries: [entry(away)], myTeamId: AJAX }),
+      assertPublishable({ fixtures: [away], entries: [entry(away)], myTeamId: AJAX, counts: [] }),
+    ).not.toThrow()
+  })
+
+  it('refuses when a competition returned events but mapped none, signalling a shape change', () => {
+    const f = fixture(AJAX, 142)
+    expect(() =>
+      assertPublishable({
+        fixtures: [f],
+        entries: [entry(f)],
+        myTeamId: AJAX,
+        counts: [{ competition: 'ucl', fetched: 189, dropped: 189 }],
+      }),
+    ).toThrow(GuardError)
+  })
+
+  it('names the wiped competition and event count in the error', () => {
+    const f = fixture(AJAX, 142)
+    expect(() =>
+      assertPublishable({
+        fixtures: [f],
+        entries: [entry(f)],
+        myTeamId: AJAX,
+        counts: [{ competition: 'ucl', fetched: 189, dropped: 189 }],
+      }),
+    ).toThrow(/ucl \(189 events\)/)
+  })
+
+  it('does not refuse a competition with fetched=0, dropped=0 — a quiet competition is normal', () => {
+    const f = fixture(AJAX, 142)
+    expect(() =>
+      assertPublishable({
+        fixtures: [f],
+        entries: [entry(f)],
+        myTeamId: AJAX,
+        counts: [{ competition: 'knvb-cup', fetched: 0, dropped: 0 }],
+      }),
+    ).not.toThrow()
+  })
+
+  it('does not refuse a competition with only partial drops', () => {
+    const f = fixture(AJAX, 142)
+    expect(() =>
+      assertPublishable({
+        fixtures: [f],
+        entries: [entry(f)],
+        myTeamId: AJAX,
+        counts: [{ competition: 'eredivisie', fetched: 10, dropped: 3 }],
+      }),
     ).not.toThrow()
   })
 })

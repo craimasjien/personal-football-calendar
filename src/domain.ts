@@ -1,9 +1,14 @@
 /**
- * Ordered stage scale. Values mirror ESPN's `season.slug` verbatim so no lossy
- * translation is needed. Index order is meaningful — see classify.ts.
+ * Ordered stage scale. Values mirror ESPN's `season.slug` verbatim for slugs we
+ * recognise, so no lossy translation is needed there — but unrecognised slugs do
+ * occur in practice (e.g. `conference-league-playoffs---final` under `ned.1`), and
+ * `toStage()` folds those onto 'regular-season' rather than inventing a round name.
+ * Index order is meaningful — see classify.ts.
  *
  * 'regular-season' and 'league-phase' both mean "not a knockout round"; they sit
- * at the bottom so any threshold comparison excludes them.
+ * at the bottom so any threshold comparison excludes them. 'regular-season' is also
+ * deliberately the *label-free* stage (DUTCH_STAGE['regular-season'] is null), which
+ * is what makes it a safe fallback for a slug we do not understand.
  */
 export const STAGES = [
   'regular-season',
@@ -24,7 +29,7 @@ export type Stage = (typeof STAGES)[number]
  * 'regular-season' and 'league-phase' are excluded deliberately: they sit at the
  * bottom of the scale, so using either as the threshold would admit every European
  * fixture and flood the calendar. Excluding them at the type level also preserves
- * the safety of toStage()'s 'league-phase' fallback for unknown slugs.
+ * the safety of toStage()'s 'regular-season' fallback for unknown slugs.
  */
 export type BigStageThreshold = Exclude<Stage, 'regular-season' | 'league-phase'>
 

@@ -47,16 +47,25 @@ export async function buildCalendar(deps: BuildDeps): Promise<BuildResult> {
   // Resolve config first: a typo in the club list should fail before we make
   // any network requests.
   const config = resolveConfig(rawConfig, teamIds)
-  const { from, to } = seasonWindow(season)
+
+  // Both the current and next season. In July `seasonFor` still reports the season that
+  // is ending, so without the second window the calendar would contain nothing but
+  // history for a month — and UEFA qualifiers, played in July, belong to the new season.
+  const windows = [seasonWindow(season), seasonWindow(season + 1)]
 
   const fixtures: Fixture[] = []
   const entries: CalendarEntry[] = []
   const counts: CompetitionCount[] = []
+  const seenFixtureIds = new Set<string>()
 
   for (const [id, meta] of Object.entries(COMPETITIONS) as Array<
     [CompetitionId, (typeof COMPETITIONS)[CompetitionId]]
   >) {
-    const rawEvents = await fetchEvents({ code: meta.code, from, to })
+    const rawEvents: unknown[] = []
+    for (const window of windows) {
+      rawEvents.push(...(await fetchEvents({ code: meta.code, from: window.from, to: window.to })))
+    }
+
     const mapped = rawEvents
       .map((e) => mapEvent(e, id))
       .filter((f): f is Fixture => f !== null)
@@ -64,12 +73,17 @@ export async function buildCalendar(deps: BuildDeps): Promise<BuildResult> {
     const count: CompetitionCount = {
       competition: id,
       fetched: rawEvents.length,
+      // Unmappable only — duplicates (possible where the two windows touch at 1 July)
+      // are silently skipped below, so the "every event dropped" signal stays meaningful.
       dropped: rawEvents.length - mapped.length,
       required: 0,
       optional: 0,
     }
 
     for (const fixture of mapped) {
+      if (seenFixtureIds.has(fixture.id)) continue
+      seenFixtureIds.add(fixture.id)
+
       fixtures.push(fixture)
       const inclusion = classify(fixture, config)
       if (inclusion === 'excluded') continue
@@ -81,7 +95,7 @@ export async function buildCalendar(deps: BuildDeps): Promise<BuildResult> {
     counts.push(count)
   }
 
-  assertPublishable({ fixtures, entries, myTeamId: config.myTeamId })
+  assertPublishable({ fixtures, entries, myTeamId: config.myTeamId, counts })
 
   return { ics: render(entries, config.displayNames), entries, fixtures, counts }
 }

@@ -18,8 +18,8 @@ export const rawConfig: RawConfig = {
   },
 
   /**
-   * Best-guess ESPN spellings. `npm run sync-teams` (Task 11) reports any it
-   * cannot match, so expect to correct a few of these.
+   * Best-guess ESPN spellings. `npm run sync-teams` reports any it cannot
+   * match, so expect to correct a few of these.
    */
   europeElite: [
     'Real Madrid',

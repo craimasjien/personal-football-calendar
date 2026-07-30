@@ -22,7 +22,9 @@ export function classify(fixture: Fixture, config: ResolvedConfig): Inclusion {
   // Rule 1 — my team in Europe: always, no exceptions.
   if (involvesMyTeam && european) return 'required'
 
-  // Rule 2 — my team domestically: depends on the opponent's tier.
+  // Rule 2 — my team domestically: depends on the opponent's tier. Reached for any
+  // non-European competition — today that's 'eredivisie' and 'knvb-cup' — so adding a
+  // new domestic competition later automatically includes my team's matches in it too.
   if (involvesMyTeam) {
     const opponentId = home.id === config.myTeamId ? away.id : home.id
     const notable = config.tier1.has(opponentId) || config.tier2.has(opponentId)

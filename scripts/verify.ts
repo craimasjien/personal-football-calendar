@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url'
 import { rawConfig } from '../config/teams.ts'
 import { buildCalendar } from '../src/build.ts'
 import { loadTeamIds } from '../src/config.ts'
@@ -44,7 +45,12 @@ async function run(): Promise<void> {
   }
 }
 
-run().catch((error: unknown) => {
-  console.error(error instanceof Error ? error.message : error)
-  process.exitCode = 1
-})
+const isEntryPoint =
+  process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.argv[1]
+
+if (isEntryPoint) {
+  run().catch((error: unknown) => {
+    console.error(error instanceof Error ? error.message : error)
+    process.exitCode = 1
+  })
+}

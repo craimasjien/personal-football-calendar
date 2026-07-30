@@ -48,8 +48,10 @@ describe('render', () => {
     expect(ics).toContain('DTEND;TZID=Europe/Amsterdam:20260510T210000')
   })
 
-  it('runs its tests in a non-Amsterdam zone, so conversion is genuinely exercised', () => {
-    expect(process.env.TZ).not.toBe('Europe/Amsterdam')
+  it('runs in a resolved, non-Amsterdam zone, so the conversions below are genuinely exercised', () => {
+    // Must not pass merely because TZ is unset: on an Amsterdam machine, unset IS Amsterdam.
+    expect(process.env.TZ).toBeDefined()
+    expect(Intl.DateTimeFormat().resolvedOptions().timeZone).not.toBe('Europe/Amsterdam')
   })
 
   it('makes a confirmed event exactly two hours long', () => {

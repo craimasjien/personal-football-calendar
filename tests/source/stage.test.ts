@@ -21,13 +21,20 @@ describe('toStage', () => {
     expect(toStage('final')).toBe('final')
   })
 
-  it('falls back to league-phase for an unknown slug', () => {
-    expect(toStage('some-new-uefa-format')).toBe('league-phase')
+  it('falls back to regular-season for an unknown slug', () => {
+    expect(toStage('some-new-uefa-format')).toBe('regular-season')
   })
 
-  it('falls back to league-phase for a missing slug', () => {
-    expect(toStage(null)).toBe('league-phase')
-    expect(toStage(undefined)).toBe('league-phase')
+  it('falls back to regular-season for a missing slug', () => {
+    expect(toStage(null)).toBe('regular-season')
+    expect(toStage(undefined)).toBe('regular-season')
+  })
+
+  it('falls back to regular-season for slugs observed live under ned.1', () => {
+    // Real ESPN data: Eredivisie clubs' European play-off ties carry these slugs,
+    // which are not in STAGES. The fallback must not label them 'Competitiefase'.
+    expect(toStage('conference-league-playoffs---semifinals')).toBe('regular-season')
+    expect(toStage('conference-league-playoffs---final')).toBe('regular-season')
   })
 
   it('never returns a stage at or above the quarter-finals for unknown input', () => {

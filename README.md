@@ -27,9 +27,14 @@ what actually shows up in the calendar (`AFC Ajax`).
   at any stage, league phase included.
 - `bigEuropeanStageFrom` — European matches from this stage onward appear as
   `Optioneel:` too, but only when at least one elite club is involved. Its type
-  only allows `'quarterfinals'` or `'semifinals'`, deliberately excluding the
-  league-phase stages: allowing one of those would admit every European
-  fixture the calendar sees, elite or not.
+  (`BigStageThreshold`) permits any of `'first-round'`, `'second-round'`,
+  `'knockout-round-playoffs'`, `'round-of-16'`, `'quarterfinals'`,
+  `'semifinals'`, or `'final'` — it only excludes the two league-phase stages,
+  since allowing either of those would admit every European fixture the
+  calendar sees, elite or not. In practice `'quarterfinals'` or `'semifinals'`
+  are the sensible choices; anything earlier (e.g. `'round-of-16'` or below)
+  would flood the calendar with early-round matches involving one elite club
+  against a nobody.
 - `displayNames` — maps ESPN's club name to the name shown in the calendar.
 
 Concretely, a big-European-competition match appears when any of these three

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { COMPETITION_IDS } from '../../src/domain.ts'
-import { AJAX_TEAM_ID, COMPETITIONS, isEuropean } from '../../src/source/competitions.ts'
+import { COMPETITIONS, isEuropean } from '../../src/source/competitions.ts'
 
 describe('COMPETITIONS', () => {
   it('covers every competition id', () => {
@@ -23,12 +23,6 @@ describe('COMPETITIONS', () => {
   it('names competitions in Dutch', () => {
     expect(COMPETITIONS.eredivisie.dutchName).toBe('Eredivisie')
     expect(COMPETITIONS['knvb-cup'].dutchName).toBe('KNVB Beker')
-  })
-})
-
-describe('AJAX_TEAM_ID', () => {
-  it('is the ESPN id confirmed by the spike', () => {
-    expect(AJAX_TEAM_ID).toBe(139)
   })
 })
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { CalendarEntry, CompetitionId, Fixture, Stage } from '../../src/domain.ts'
 import { describe as describeFixture, summary } from '../../src/ics/dutch.ts'
+import { toStage } from '../../src/source/stage.ts'
 
 function fixture(
   competition: CompetitionId,
@@ -95,6 +96,14 @@ describe('describe', () => {
 
   it('omits the leg for a single-match round', () => {
     expect(describeFixture(fixture('ucl', 'final', null))).not.toContain('wedstrijd')
+  })
+
+  it('describes a fixture with an unrecognised ESPN slug by competition alone, inventing no round', () => {
+    // Real slugs like 'conference-league-playoffs---final' appear under ned.1 and are not
+    // in STAGES. The fallback must not label them 'Competitiefase'.
+    const f = fixture('eredivisie', toStage('conference-league-playoffs---final'))
+    expect(describeFixture(f)).toBe('Eredivisie')
+    expect(describeFixture(f)).not.toContain('Competitiefase')
   })
 
   it('never emits an English round name', () => {

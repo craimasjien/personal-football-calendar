@@ -48,17 +48,50 @@ function espnEvent(id: string, homeId: number, awayId: number, slug = 'regular-s
 
 const ERE = COMPETITIONS.eredivisie.code
 
+/**
+ * Real ESPN season windows are disjoint (overlap=0, verified live), so a fixture
+ * appears in exactly one of the two windows fetched. Serve the configured events
+ * only on the first request per code, and nothing on the second, to mirror that
+ * rather than have every existing count-based test double under the hood.
+ */
 function fetcherFor(byCode: Record<string, unknown[]>) {
-  return vi.fn(async ({ code }: { code: string }) => byCode[code] ?? [])
+  const served = new Set<string>()
+  return vi.fn(async ({ code }: { code: string; from: string; to: string }) => {
+    if (served.has(code)) return []
+    served.add(code)
+    return byCode[code] ?? []
+  })
 }
 
 describe('buildCalendar', () => {
-  it('fetches every configured competition exactly once', async () => {
+  it('fetches every configured competition for both the current and next season window', async () => {
     const fetchEvents = fetcherFor({ [ERE]: [espnEvent('1', AJAX, FEYENOORD)] })
 
     await buildCalendar({ season: 2025, rawConfig: RAW, teamIds: TEAM_IDS, fetchEvents })
 
-    expect(fetchEvents).toHaveBeenCalledTimes(Object.keys(COMPETITIONS).length)
+    expect(fetchEvents).toHaveBeenCalledTimes(Object.keys(COMPETITIONS).length * 2)
+  })
+
+  it('asks for both the current and the next season window', async () => {
+    const fetchEvents = fetcherFor({ [ERE]: [espnEvent('1', AJAX, FEYENOORD)] })
+    await buildCalendar({ season: 2026, rawConfig: RAW, teamIds: TEAM_IDS, fetchEvents })
+    const windows = fetchEvents.mock.calls.map((c) => `${c[0].from}-${c[0].to}`)
+    expect(windows).toContain('20260701-20270701')
+    expect(windows).toContain('20270701-20280701')
+  })
+
+  it('does not emit the same fixture twice when both windows return it', async () => {
+    // Two windows touching at 1 July could in principle both return one event.
+    const dup = espnEvent('1', AJAX, FEYENOORD)
+    const fetchEvents = vi.fn(async ({ code }: { code: string }) => (code === ERE ? [dup] : []))
+    const result = await buildCalendar({
+      season: 2026,
+      rawConfig: RAW,
+      teamIds: TEAM_IDS,
+      fetchEvents,
+    })
+    expect(result.fixtures.filter((f) => f.id === '1')).toHaveLength(1)
+    expect(result.ics.match(/UID:fixture-1@football-calendar/g)).toHaveLength(1)
   })
 
   it('asks for the right season window', async () => {
@@ -147,6 +180,20 @@ describe('buildCalendar', () => {
     expect(result.entries).toHaveLength(1)
   })
 
+  it('fails the guard rather than publishing when a competition is entirely unmappable', async () => {
+    // Simulates ESPN changing shape for one feed only: events come back but none of
+    // them have a recognisable team, so mapEvent drops every single one.
+    const shapeChanged = { id: '1', date: '2026-03-15T13:30Z', competitions: [{}] }
+    const fetchEvents = fetcherFor({
+      [ERE]: [espnEvent('1', AJAX, FEYENOORD)],
+      [COMPETITIONS.ucl.code]: [shapeChanged],
+    })
+
+    await expect(
+      buildCalendar({ season: 2025, rawConfig: RAW, teamIds: TEAM_IDS, fetchEvents }),
+    ).rejects.toThrow(/unmappable/i)
+  })
+
   it('fails the guard rather than publishing when my team is absent', async () => {
     const fetchEvents = fetcherFor({ [ERE]: [espnEvent('1', FEYENOORD, CAMBUUR)] })
 
@@ -209,11 +256,16 @@ describe('buildCalendar', () => {
     expect(result.entries.find((e) => e.fixture.id === '2')!.inclusion).toBe('required')
   })
 
-  it('fetches exactly the five configured competition codes', async () => {
+  it('fetches exactly the five configured competition codes, each for both windows', async () => {
     const fetchEvents = fetcherFor({ [ERE]: [espnEvent('1', AJAX, FEYENOORD)] })
     await buildCalendar({ season: 2025, rawConfig: RAW, teamIds: TEAM_IDS, fetchEvents })
-    expect(fetchEvents.mock.calls.map((c) => c[0].code).sort()).toEqual(
-      Object.values(COMPETITIONS).map((c) => c.code).sort(),
-    )
+
+    const codes = fetchEvents.mock.calls.map((c) => c[0].code)
+    const expectedCodes = Object.values(COMPETITIONS).map((c) => c.code)
+    // Every code appears, and each exactly twice — once per season window.
+    expect(new Set(codes)).toEqual(new Set(expectedCodes))
+    for (const code of expectedCodes) {
+      expect(codes.filter((c) => c === code)).toHaveLength(2)
+    }
   })
 })

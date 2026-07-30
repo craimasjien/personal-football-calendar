@@ -20,8 +20,22 @@ export function assertPublishable(input: {
   fixtures: Fixture[]
   entries: CalendarEntry[]
   myTeamId: number
+  counts: Array<{ competition: string; fetched: number; dropped: number }>
 }): void {
-  const { fixtures, entries, myTeamId } = input
+  const { fixtures, entries, myTeamId, counts } = input
+
+  // A competition that returned events but mapped none means ESPN changed shape for that
+  // feed. Without this the build goes green with a whole competition missing — the
+  // per-competition warning alone is indistinguishable from a quiet competition. There is
+  // no benign case: a competition where every single event is unmappable does not occur.
+  const wiped = counts.filter((c) => c.fetched > 0 && c.dropped === c.fetched)
+  if (wiped.length > 0) {
+    const names = wiped.map((c) => `${c.competition} (${c.fetched} events)`).join(', ')
+    throw new GuardError(
+      `Every event was unmappable for: ${names} — refusing to publish. ` +
+        'ESPN has probably changed the shape of that feed.',
+    )
+  }
 
   const mine = fixtures.filter((f) => f.home.id === myTeamId || f.away.id === myTeamId)
   if (mine.length === 0) {

@@ -100,12 +100,12 @@ describe('classify — rule 2: Ajax domestically depends on the opponent tier', 
   })
 })
 
-// Rule 3 change (owner-approved, post Task 7): a non-elite pairing below the
-// final is EXCLUDED even at or beyond the stage threshold — it now takes at
-// least one elite club to admit a late-stage match. Do not "restore" the old
-// behaviour of admitting any late-stage match regardless of who's playing;
-// that was the exact defect the owner flagged (28 Optional entries with no
-// elite club on either side).
+// Rule 3 change (owner-approved): a non-elite pairing below the final is
+// EXCLUDED even at or beyond the stage threshold — it now takes at least one
+// elite club to admit a late-stage match. Do not "restore" the old behaviour
+// of admitting any late-stage match regardless of who's playing; that was
+// the exact defect the owner flagged (28 Optional entries with no elite
+// club on either side).
 describe('classify — rule 3: big European matches without Ajax', () => {
   it('marks a league-phase match between two elite clubs optional (3a)', () => {
     expect(classify(fixture('ucl', BARCELONA, UNITED, 'league-phase'), CONFIG)).toBe('optional')
@@ -115,7 +115,7 @@ describe('classify — rule 3: big European matches without Ajax', () => {
     expect(classify(fixture('ucl', BARCELONA, UNITED, 'quarterfinals'), CONFIG)).toBe('optional')
   })
 
-  it('excludes a quarter-final between two non-elite clubs (behaviour change from Task 7)', () => {
+  it('excludes a quarter-final between two non-elite clubs (owner-approved behaviour change)', () => {
     expect(classify(fixture('ucl', SLAVIA, BODO, 'quarterfinals'), CONFIG)).toBe('excluded')
   })
 
