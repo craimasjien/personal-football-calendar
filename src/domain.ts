@@ -15,7 +15,11 @@ export const STAGES = [
   'league-phase',
   'first-round',
   'second-round',
-  'knockout-round-playoffs',
+  'third-round', // UEFA qualifying
+  'playoff-round', // UEFA qualifying play-off round — NOT the same as
+  // 'knockout-round-playoffs' below, which is the main competition's own
+  // February play-off round. Two genuinely different rounds; do not merge them.
+  'knockout-round-playoffs', // main competition, February
   'round-of-16',
   'quarterfinals',
   'semifinals',
@@ -33,7 +37,18 @@ export type Stage = (typeof STAGES)[number]
  */
 export type BigStageThreshold = Exclude<Stage, 'regular-season' | 'league-phase'>
 
-export const COMPETITION_IDS = ['eredivisie', 'knvb-cup', 'ucl', 'uel', 'uecl'] as const
+export const COMPETITION_IDS = [
+  'eredivisie',
+  'knvb-cup',
+  'johan-cruijff-schaal',
+  'ucl',
+  'uel',
+  'uecl',
+  'ucl-qual',
+  'uel-qual',
+  'uecl-qual',
+  'friendly',
+] as const
 export type CompetitionId = (typeof COMPETITION_IDS)[number]
 
 export type Team = {

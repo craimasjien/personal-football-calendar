@@ -85,6 +85,22 @@ describe('describe', () => {
     expect(describeFixture(fixture('knvb-cup', 'second-round'))).toBe('KNVB Beker · Tweede ronde')
   })
 
+  it('uses Dutch labels for the two UEFA-qualifying-only rounds', () => {
+    expect(describeFixture(fixture('uecl-qual', 'third-round'))).toBe(
+      'UEFA Conference League kwalificatie · Derde ronde',
+    )
+    expect(describeFixture(fixture('ucl-qual', 'playoff-round'))).toBe(
+      'UEFA Champions League kwalificatie · Play-offronde',
+    )
+  })
+
+  it('disambiguates same-named rounds by competition name, not a per-competition label', () => {
+    expect(describeFixture(fixture('uecl-qual', 'second-round'))).toBe(
+      'UEFA Conference League kwalificatie · Tweede ronde',
+    )
+    expect(describeFixture(fixture('knvb-cup', 'second-round'))).toBe('KNVB Beker · Tweede ronde')
+  })
+
   it('appends the leg for a two-legged tie', () => {
     expect(describeFixture(fixture('ucl', 'quarterfinals', 1))).toBe(
       'UEFA Champions League · Kwartfinale · Heenwedstrijd',
@@ -104,6 +120,19 @@ describe('describe', () => {
     const f = fixture('eredivisie', toStage('conference-league-playoffs---final'))
     expect(describeFixture(f)).toBe('Eredivisie')
     expect(describeFixture(f)).not.toContain('Competitiefase')
+  })
+
+  it('describes a Johan Cruijff Schaal fixture by competition name alone, no round', () => {
+    // ned.supercup carries an unrecognised season slug like '2026-johan-cruyff-shield',
+    // which falls back to 'regular-season' — the label-free stage.
+    const f = fixture('johan-cruijff-schaal', toStage('2026-johan-cruyff-shield'))
+    expect(describeFixture(f)).toBe('Johan Cruijff Schaal')
+  })
+
+  it('describes a friendly by competition name alone, no round', () => {
+    // club.friendly carries an unrecognised season slug like '2026-club-friendly'.
+    const f = fixture('friendly', toStage('2026-club-friendly'))
+    expect(describeFixture(f)).toBe('Oefenwedstrijd')
   })
 
   it('never emits an English round name', () => {

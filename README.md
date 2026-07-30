@@ -28,9 +28,10 @@ what actually shows up in the calendar (`AFC Ajax`).
 - `bigEuropeanStageFrom` — European matches from this stage onward appear as
   `Optioneel:` too, but only when at least one elite club is involved. Its type
   (`BigStageThreshold`) permits any of `'first-round'`, `'second-round'`,
-  `'knockout-round-playoffs'`, `'round-of-16'`, `'quarterfinals'`,
-  `'semifinals'`, or `'final'` — it only excludes the two league-phase stages,
-  since allowing either of those would admit every European fixture the
+  `'third-round'`, `'playoff-round'`, `'knockout-round-playoffs'`,
+  `'round-of-16'`, `'quarterfinals'`, `'semifinals'`, or `'final'` — it only
+  excludes the two league-phase stages, since allowing either of those would
+  admit every European fixture the
   calendar sees, elite or not. In practice `'quarterfinals'` or `'semifinals'`
   are the sensible choices; anything earlier (e.g. `'round-of-16'` or below)
   would flood the calendar with early-round matches involving one elite club
@@ -47,6 +48,27 @@ quarter-finals between clubs nobody asked about.
 After adding a club, run `npm run sync-teams` to refresh `config/team-ids.json`,
 then commit both files. The build fails loudly if a configured club has no ID.
 
+## Competitions
+
+Ten ESPN competitions are fetched, each for the current and next season window:
+
+| Competition | ESPN code | European? |
+|---|---|---|
+| Eredivisie | `ned.1` | no |
+| KNVB Beker | `ned.cup` | no |
+| Johan Cruijff Schaal | `ned.supercup` | no |
+| UEFA Champions League | `uefa.champions` | yes |
+| UEFA Europa League | `uefa.europa` | yes |
+| UEFA Conference League | `uefa.europa.conf` | yes |
+| UEFA Champions League kwalificatie | `uefa.champions_qual` | yes |
+| UEFA Europa League kwalificatie | `uefa.europa_qual` | yes |
+| UEFA Conference League kwalificatie | `uefa.europa.conf_qual` | yes |
+| Oefenwedstrijd (friendlies) | `club.friendly` | no |
+
+The Johan Cruijff Schaal and friendlies are not European, so a match in either is
+only included via the domestic rule (opponent tier) when my team plays in it —
+never via rule 4, which is Eredivisie-only.
+
 ## Data source
 
 ESPN's public soccer API, unauthenticated — there is no API key and no secret
@@ -56,6 +78,12 @@ It is undocumented and could change without notice. Two things make that
 tolerable: the guards refuse to publish a calendar that fails its sanity checks,
 so a breakage degrades to a stale feed rather than a wrong one; and the provider
 is confined to `src/source/`, so switching to a paid API is one directory's work.
+
+The non-obvious fact worth recording here: ESPN files UEFA qualifying rounds
+under entirely separate league codes from the main competition (e.g.
+`uefa.champions_qual`, not `uefa.champions`) — a qualifying-round fixture never
+appears under the main competition's own code at all. Missing this previously
+meant Ajax's own European qualifiers were silently absent from the calendar.
 
 Matchday numbers are unavailable from this source, so league fixtures are
 described by competition alone. Knockout rounds and legs are described in full.

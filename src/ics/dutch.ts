@@ -12,6 +12,8 @@ const DUTCH_STAGE: Record<Stage, string | null> = {
   'league-phase': 'Competitiefase',
   'first-round': 'Eerste ronde',
   'second-round': 'Tweede ronde',
+  'third-round': 'Derde ronde',
+  'playoff-round': 'Play-offronde',
   'knockout-round-playoffs': 'Tussenronde',
   'round-of-16': 'Achtste finale',
   quarterfinals: 'Kwartfinale',

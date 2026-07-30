@@ -45,6 +45,34 @@ describe('STAGES', () => {
     const indices = order.map((s) => STAGES.indexOf(s))
     expect(indices).toEqual([...indices].sort((a, b) => a - b))
   })
+
+  it('has no duplicate stages', () => {
+    expect(new Set(STAGES).size).toBe(STAGES.length)
+  })
+
+  it('includes the two UEFA-qualifying-only stages', () => {
+    expect(STAGES).toContain('third-round')
+    expect(STAGES).toContain('playoff-round')
+  })
+
+  it('orders every UEFA qualifying round below quarterfinals, so rule 3c cannot admit them', () => {
+    const qualifyingStages = ['first-round', 'second-round', 'third-round', 'playoff-round'] as const
+    for (const stage of qualifyingStages) {
+      expect(STAGES.indexOf(stage)).toBeLessThan(STAGES.indexOf('quarterfinals'))
+    }
+  })
+
+  it('orders qualifying rounds first through play-off in sequence, ahead of the main competition', () => {
+    const order = [
+      'first-round',
+      'second-round',
+      'third-round',
+      'playoff-round',
+      'knockout-round-playoffs',
+    ] as const
+    const indices = order.map((s) => STAGES.indexOf(s))
+    expect(indices).toEqual([...indices].sort((a, b) => a - b))
+  })
 })
 
 describe('BigStageThreshold', () => {

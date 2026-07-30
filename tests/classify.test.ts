@@ -214,3 +214,45 @@ describe('classify — the KNVB Cup without Ajax is never included', () => {
     expect(classify(fixture('knvb-cup', PSV, FEYENOORD, 'final'), CONFIG)).toBe('excluded')
   })
 })
+
+describe('classify — UEFA qualifying is European, so rule 1 covers it', () => {
+  it('requires Ajax in the Conference League qualifying second round (tonight\'s match)', () => {
+    // AFC Ajax vs. Vojvodina, second-round leg 2, 30 July 2026 — the gap this
+    // change closes. Rule 1 must fire here exactly as it does for the league phase.
+    expect(classify(fixture('uecl-qual', AJAX, HERACLES, 'second-round'), CONFIG)).toBe('required')
+  })
+
+  it('requires Ajax in the Champions League qualifying third round', () => {
+    expect(classify(fixture('ucl-qual', AJAX, HERACLES, 'third-round'), CONFIG)).toBe('required')
+  })
+
+  it('excludes two non-elite clubs in the Conference League qualifying play-off round', () => {
+    // ~150-256 UECL qualifying events per season; almost none should land without
+    // Ajax or an elite club involved, and playoff-round sits below the big-match
+    // threshold (quarterfinals), so rule 3c does not admit it either.
+    expect(classify(fixture('uecl-qual', SLAVIA, BODO, 'playoff-round'), CONFIG)).toBe('excluded')
+  })
+})
+
+describe('classify — the Johan Cruijff Schaal, a non-European domestic fixture', () => {
+  it('requires Ajax vs a tier 1 club', () => {
+    expect(classify(fixture('johan-cruijff-schaal', AJAX, PSV), CONFIG)).toBe('required')
+  })
+
+  it('marks Ajax vs a tier 3 club optional', () => {
+    expect(classify(fixture('johan-cruijff-schaal', AJAX, CAMBUUR), CONFIG)).toBe('optional')
+  })
+
+  it('excludes two tier 1 clubs without Ajax (rule 4 is Eredivisie-only)', () => {
+    // Exactly this Sunday's PSV vs. AZ: rule 4 only ever fires for competition ===
+    // 'eredivisie', so a big non-Ajax Johan Cruijff Schaal match is never included,
+    // even though both sides here are tier 1.
+    expect(classify(fixture('johan-cruijff-schaal', PSV, FEYENOORD), CONFIG)).toBe('excluded')
+  })
+})
+
+describe('classify — friendlies, a non-European domestic fixture', () => {
+  it('marks Ajax vs a tier 3 club optional', () => {
+    expect(classify(fixture('friendly', AJAX, CAMBUUR), CONFIG)).toBe('optional')
+  })
+})

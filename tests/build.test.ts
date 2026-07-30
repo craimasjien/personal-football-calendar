@@ -256,7 +256,7 @@ describe('buildCalendar', () => {
     expect(result.entries.find((e) => e.fixture.id === '2')!.inclusion).toBe('required')
   })
 
-  it('fetches exactly the five configured competition codes, each for both windows', async () => {
+  it('fetches exactly the ten configured competition codes, each for both windows', async () => {
     const fetchEvents = fetcherFor({ [ERE]: [espnEvent('1', AJAX, FEYENOORD)] })
     await buildCalendar({ season: 2025, rawConfig: RAW, teamIds: TEAM_IDS, fetchEvents })
 
