@@ -1,10 +1,10 @@
-import type { Stage } from '../src/domain.ts'
+import type { BigStageThreshold } from '../src/domain.ts'
 
 export type RawConfig = {
   myTeam: string
   eredivisie: { tier1: string[]; tier2: string[] }
   europeElite: string[]
-  bigEuropeanStageFrom: Stage
+  bigEuropeanStageFrom: BigStageThreshold
   /** Provider name → the name to show in the calendar. */
   displayNames: Record<string, string>
 }

@@ -18,6 +18,16 @@ export const STAGES = [
 ] as const
 export type Stage = (typeof STAGES)[number]
 
+/**
+ * Stages that may serve as the "big European match" threshold.
+ *
+ * 'regular-season' and 'league-phase' are excluded deliberately: they sit at the
+ * bottom of the scale, so using either as the threshold would admit every European
+ * fixture and flood the calendar. Excluding them at the type level also preserves
+ * the safety of toStage()'s 'league-phase' fallback for unknown slugs.
+ */
+export type BigStageThreshold = Exclude<Stage, 'regular-season' | 'league-phase'>
+
 export const COMPETITION_IDS = ['eredivisie', 'knvb-cup', 'ucl', 'uel', 'uecl'] as const
 export type CompetitionId = (typeof COMPETITION_IDS)[number]
 

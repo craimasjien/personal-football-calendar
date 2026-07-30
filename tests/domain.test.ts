@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { STAGES } from '../src/domain.ts'
+import type { BigStageThreshold } from '../src/domain.ts'
 import { rawConfig } from '../config/teams.ts'
 
 describe('config/teams.ts', () => {
@@ -43,5 +44,21 @@ describe('STAGES', () => {
     const order = ['round-of-16', 'quarterfinals', 'semifinals', 'final'] as const
     const indices = order.map((s) => STAGES.indexOf(s))
     expect(indices).toEqual([...indices].sort((a, b) => a - b))
+  })
+})
+
+describe('BigStageThreshold', () => {
+  it('accepts knockout stages', () => {
+    const qf: BigStageThreshold = 'quarterfinals'
+    const sf: BigStageThreshold = 'semifinals'
+    expect([qf, sf]).toEqual(['quarterfinals', 'semifinals'])
+  })
+
+  it('rejects the league phases at compile time', () => {
+    // @ts-expect-error 'league-phase' would admit every European fixture
+    const flood: BigStageThreshold = 'league-phase'
+    // @ts-expect-error 'regular-season' would admit every European fixture
+    const worse: BigStageThreshold = 'regular-season'
+    expect([flood, worse]).toEqual(['league-phase', 'regular-season'])
   })
 })

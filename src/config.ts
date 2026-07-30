@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import type { RawConfig } from '../config/teams.ts'
-import type { Stage } from './domain.ts'
+import type { BigStageThreshold } from './domain.ts'
 
 export class UnknownTeamError extends Error {}
 
@@ -9,7 +9,7 @@ export type ResolvedConfig = {
   tier1: Set<number>
   tier2: Set<number>
   europeElite: Set<number>
-  bigEuropeanStageFrom: Stage
+  bigEuropeanStageFrom: BigStageThreshold
   /** Provider name → calendar display name. */
   displayNames: Record<string, string>
 }
