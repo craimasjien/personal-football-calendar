@@ -8,7 +8,7 @@
     "verify": "tsx scripts/verify.ts",
     "sync-teams": "tsx scripts/sync-teams.ts",
     "test": "vitest run",
-    "test:zones": "for z in Europe/Amsterdam UTC America/New_York Asia/Tokyo Pacific/Kiritimati; do echo \"TZ=$z\" && TZ=$z vitest run tests/ics/render.test.ts tests/source/map.test.ts || exit 1; done",
+    "test:zones": "for z in Australia/Sydney UTC America/New_York Asia/Tokyo Pacific/Kiritimati; do echo \"TZ=$z\" && TZ=$z vitest run tests/ics/render.test.ts tests/source/map.test.ts || exit 1; done",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
