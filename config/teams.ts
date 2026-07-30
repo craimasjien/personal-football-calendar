@@ -14,7 +14,7 @@ export const rawConfig: RawConfig = {
 
   eredivisie: {
     tier1: ['Ajax Amsterdam', 'PSV Eindhoven', 'Feyenoord Rotterdam'],
-    tier2: ['AZ Alkmaar', 'FC Twente', 'FC Utrecht'],
+    tier2: ['AZ Alkmaar', 'FC Twente', 'FC Utrecht', 'Heerenveen', 'PEC Zwolle'],
   },
 
   /**
