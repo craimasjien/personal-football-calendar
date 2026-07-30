@@ -27,7 +27,7 @@ function configuredNames(): string[] {
 }
 
 /**
- * Harvest every club ESPN mentions across all five competitions, for both the
+ * Harvest every club ESPN mentions across all configured competitions, for both the
  * current and previous season. Two seasons because a club only appears if it has
  * a fixture: an elite side whose competition has not been drawn yet would be
  * invisible using the current season alone.

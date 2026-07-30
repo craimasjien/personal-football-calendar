@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { CalendarEntry, CompetitionId, Fixture, Stage } from '../../src/domain.ts'
+import { STAGES, type CalendarEntry, type CompetitionId, type Fixture, type Stage } from '../../src/domain.ts'
 import { describe as describeFixture, summary } from '../../src/ics/dutch.ts'
 import { toStage } from '../../src/source/stage.ts'
 
@@ -136,19 +136,15 @@ describe('describe', () => {
   })
 
   it('never emits an English round name', () => {
-    const english = /quarter|semi|round of|playoff|regular season|league phase/i
-    const stages: Stage[] = [
-      'regular-season',
-      'league-phase',
-      'first-round',
-      'second-round',
-      'knockout-round-playoffs',
-      'round-of-16',
-      'quarterfinals',
-      'semifinals',
-      'final',
-    ]
-    for (const stage of stages) {
+    // Match play-off with or without the hyphen, but only as a whole word — the correct
+    // Dutch label for 'playoff-round' is 'Play-offronde', which legitimately contains the
+    // substring 'play-off' as a borrowed term glued to the Dutch suffix 'ronde'. Without
+    // the \b boundaries this regex would flag that correct label as a false positive; with
+    // them, it still catches the leaked English forms 'Play-off round' / 'Playoff round'.
+    const english = /quarter|semi|round of|\bplay-?off\b|regular season|league phase|third/i
+    // Iterate STAGES itself, not a hardcoded copy, so a newly added stage is covered
+    // automatically instead of silently skipped.
+    for (const stage of STAGES) {
       expect(describeFixture(fixture('ucl', stage))).not.toMatch(english)
     }
   })

@@ -3,6 +3,16 @@ import type { CalendarEntry, Fixture } from './domain.ts'
 export class GuardError extends Error {}
 
 /**
+ * Minimum events before "everything was dropped" is evidence of anything.
+ *
+ * The Johan Cruijff Schaal returns exactly one fixture per season window, so a single
+ * cancelled supercup would otherwise block the entire calendar — including my team's
+ * matches. Below this threshold a total drop is indistinguishable from ordinary noise,
+ * so it is reported as a warning by main.ts rather than treated as fatal.
+ */
+const MIN_EVENTS_FOR_WIPE_GUARD = 5
+
+/**
  * Refuse to publish a calendar we are not confident in.
  *
  * GitHub Pages keeps serving the last successful file, so aborting degrades to
@@ -24,11 +34,16 @@ export function assertPublishable(input: {
 }): void {
   const { fixtures, entries, myTeamId, counts } = input
 
-  // A competition that returned events but mapped none means ESPN changed shape for that
-  // feed. Without this the build goes green with a whole competition missing — the
-  // per-competition warning alone is indistinguishable from a quiet competition. There is
-  // no benign case: a competition where every single event is unmappable does not occur.
-  const wiped = counts.filter((c) => c.fetched > 0 && c.dropped === c.fetched)
+  // A competition that returned a meaningful number of events but mapped none means ESPN
+  // changed shape for that feed. Without this the build goes green with a whole competition
+  // missing — the per-competition warning alone is indistinguishable from a quiet
+  // competition. The threshold matters: some competitions (the Johan Cruijff Schaal) return
+  // as few as one event per season window, and a single cancelled fixture there is ordinary
+  // noise, not a shape change — treating it as fatal would take down the whole calendar,
+  // Ajax's own matches included, over a total sample size of one.
+  const wiped = counts.filter(
+    (c) => c.fetched >= MIN_EVENTS_FOR_WIPE_GUARD && c.dropped === c.fetched,
+  )
   if (wiped.length > 0) {
     const names = wiped.map((c) => `${c.competition} (${c.fetched} events)`).join(', ')
     throw new GuardError(

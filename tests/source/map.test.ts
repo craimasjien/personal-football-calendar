@@ -159,6 +159,7 @@ describe('mapEvent against recorded ESPN responses', () => {
     { file: 'espn-eredivisie.json', competition: 'eredivisie' as const, min: 5 },
     { file: 'espn-ucl.json', competition: 'ucl' as const, min: 15 },
     { file: 'espn-knvb-cup.json', competition: 'knvb-cup' as const, min: 10 },
+    { file: 'espn-uecl-qual.json', competition: 'uecl-qual' as const, min: 8 },
   ]
 
   for (const { file, competition, min } of cases) {
@@ -254,5 +255,23 @@ describe('mapEvent against recorded ESPN responses', () => {
     expect(stages).toContain('first-round')
     expect(stages).toContain('second-round')
     expect(stages).toContain('final')
+  })
+
+  it('recovers all four qualifying rounds from the Conference League qualifying recording', () => {
+    // Live-recorded from uefa.europa.conf_qual, season 2025 (dates 20250701-20260701),
+    // which is the window that carries first through play-off round. This is what
+    // evidences that 'third-round' and 'playoff-round' are real ESPN slugs, not a guess —
+    // without a committed recording, a wrong guess (e.g. 'qualifying-play-off-round')
+    // would fall back silently to 'regular-season' and STAGES would carry dead code.
+    const stages = new Set(
+      recorded('espn-uecl-qual.json')
+        .map((e) => mapEvent(e, 'uecl-qual'))
+        .filter((f) => f !== null)
+        .map((f) => f.stage),
+    )
+    expect(stages).toContain('first-round')
+    expect(stages).toContain('second-round')
+    expect(stages).toContain('third-round')
+    expect(stages).toContain('playoff-round')
   })
 })

@@ -108,4 +108,54 @@ describe('assertPublishable', () => {
       }),
     ).not.toThrow()
   })
+
+  it('does not refuse a total wipe below the wipe-guard threshold of 5 (the supercup case)', () => {
+    // johan-cruijff-schaal returns exactly one event per season window: a single
+    // cancelled supercup must not take down the whole calendar.
+    const f = fixture(AJAX, 142)
+    expect(() =>
+      assertPublishable({
+        fixtures: [f],
+        entries: [entry(f)],
+        myTeamId: AJAX,
+        counts: [{ competition: 'johan-cruijff-schaal', fetched: 1, dropped: 1 }],
+      }),
+    ).not.toThrow()
+  })
+
+  it('does not refuse a total wipe of 4 events, just below the wipe-guard threshold of 5', () => {
+    const f = fixture(AJAX, 142)
+    expect(() =>
+      assertPublishable({
+        fixtures: [f],
+        entries: [entry(f)],
+        myTeamId: AJAX,
+        counts: [{ competition: 'johan-cruijff-schaal', fetched: 4, dropped: 4 }],
+      }),
+    ).not.toThrow()
+  })
+
+  it('refuses a total wipe of 5 events, exactly at the wipe-guard threshold of 5', () => {
+    const f = fixture(AJAX, 142)
+    expect(() =>
+      assertPublishable({
+        fixtures: [f],
+        entries: [entry(f)],
+        myTeamId: AJAX,
+        counts: [{ competition: 'johan-cruijff-schaal', fetched: 5, dropped: 5 }],
+      }),
+    ).toThrow(GuardError)
+  })
+
+  it('still refuses a total wipe at large volume, above the wipe-guard threshold', () => {
+    const f = fixture(AJAX, 142)
+    expect(() =>
+      assertPublishable({
+        fixtures: [f],
+        entries: [entry(f)],
+        myTeamId: AJAX,
+        counts: [{ competition: 'ucl', fetched: 189, dropped: 189 }],
+      }),
+    ).toThrow(GuardError)
+  })
 })

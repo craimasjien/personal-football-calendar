@@ -182,11 +182,17 @@ describe('buildCalendar', () => {
 
   it('fails the guard rather than publishing when a competition is entirely unmappable', async () => {
     // Simulates ESPN changing shape for one feed only: events come back but none of
-    // them have a recognisable team, so mapEvent drops every single one.
-    const shapeChanged = { id: '1', date: '2026-03-15T13:30Z', competitions: [{}] }
+    // them have a recognisable team, so mapEvent drops every single one. Five events
+    // (not one) because the wipe guard only fires at or above its minimum-events
+    // threshold — see tests/guards.test.ts for the boundary itself.
+    const shapeChanged = Array.from({ length: 5 }, (_, i) => ({
+      id: String(i + 1),
+      date: '2026-03-15T13:30Z',
+      competitions: [{}],
+    }))
     const fetchEvents = fetcherFor({
       [ERE]: [espnEvent('1', AJAX, FEYENOORD)],
-      [COMPETITIONS.ucl.code]: [shapeChanged],
+      [COMPETITIONS.ucl.code]: shapeChanged,
     })
 
     await expect(

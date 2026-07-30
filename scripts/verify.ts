@@ -39,7 +39,7 @@ async function run(): Promise<void> {
   console.log(`\n${result.entries.length} events across ${result.fixtures.length} fixtures`)
   for (const c of result.counts) {
     console.log(
-      `  ${c.competition.padEnd(12)} fetched=${c.fetched} dropped=${c.dropped}` +
+      `  ${c.competition.padEnd(20)} fetched=${c.fetched} dropped=${c.dropped}` +
         ` required=${c.required} optional=${c.optional}`,
     )
   }

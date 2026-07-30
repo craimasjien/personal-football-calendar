@@ -49,7 +49,7 @@ async function run(): Promise<void> {
             ? `  <-- ${c.dropped} dropped`
             : ''
     console.log(
-      `  ${c.competition.padEnd(12)} fetched=${String(c.fetched).padStart(4)}` +
+      `  ${c.competition.padEnd(20)} fetched=${String(c.fetched).padStart(4)}` +
         ` required=${String(c.required).padStart(3)} optional=${String(c.optional).padStart(3)}${note}`,
     )
   }
