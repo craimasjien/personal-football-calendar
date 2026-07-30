@@ -22,7 +22,7 @@ function indexHtml(icsUrl: string): string {
 </style>
 <h1>Voetbalkalender</h1>
 <p>Abonneer op deze agenda om te zien welke wedstrijden ik wil kijken.</p>
-<p><a class="button" href="webcal://${icsUrl}">Abonneren op iPhone</a></p>
+<p><a class="button" href="webcal://${icsUrl}">Abonneren</a></p>
 <p>Of voeg deze URL handmatig toe: <code>https://${icsUrl}</code></p>
 `
 }
