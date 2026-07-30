@@ -1,4 +1,4 @@
-# my-personal-football-calendar
+# personal-football-calendar
 
 Publishes a Dutch `.ics` feed of the football matches I want to watch, rebuilt
 weekly by GitHub Actions and served from GitHub Pages.
@@ -68,9 +68,32 @@ described by competition alone. Knockout rounds and legs are described in full.
 
 No environment variables are required to run any of these locally.
 `npm run build:calendar` accepts an optional `CALENDAR_HOST` to also emit a
-subscribe page (`dist/index.html`); the published workflow sets this
-automatically, and it is host + path only, e.g.
-`bryan.github.io/my-personal-football-calendar` — no scheme, no trailing slash.
+subscribe page (`dist/index.html`); it is host + path only, e.g.
+`craimasjien.github.io/personal-football-calendar` — no scheme, no trailing
+slash. CI computes this automatically from `GITHUB_REPOSITORY` at build time,
+so it only needs setting by hand for a local `npm run build:calendar` — it is
+not required configuration otherwise.
+
+## First deploy
+
+The repository already exists at
+`https://github.com/craimasjien/personal-football-calendar` with a remote
+already configured, so there is no repository to create.
+
+1. Enable Pages: **Settings → Pages → Build and deployment → Source → GitHub
+   Actions**. This must be done before the first workflow run or the deploy
+   step fails.
+   - A private repository needs GitHub Pro to serve Pages. If that's
+     unavailable, make the repository public — the calendar contains only
+     public fixture data and no credentials of any kind.
+2. The workflow triggers on push to `main` and on manual dispatch. Since work
+   currently lives on `feature/football-calendar`, the first deploy needs
+   either a merge to `main` or a manual run from the **Actions** tab.
+3. After a successful run, the feed is at
+   `https://craimasjien.github.io/personal-football-calendar/football.ics`,
+   with a tap-to-subscribe page at the root.
+4. To force a rebuild when a kickoff time moves: **Actions → Publish
+   calendar → Run workflow**.
 
 ## Design
 
