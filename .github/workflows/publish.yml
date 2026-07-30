@@ -1,0 +1,69 @@
+name: Publish calendar
+
+on:
+  schedule:
+    # Mondays at 06:00 UTC. A daily run costs nothing — the source has no quota —
+    # and would catch TV-driven kickoff changes sooner. Change to '0 6 * * *'.
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deploys race; queue instead of cancelling, so a scheduled
+# run cannot be dropped.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Test across timezones
+        run: npm run test:zones
+
+      # GITHUB_REPOSITORY ("owner/repo") and GITHUB_REPOSITORY_OWNER ("owner")
+      # are default runner env vars set for every trigger type, including
+      # `schedule` — unlike github.event.repository.name, which can be empty
+      # on a schedule trigger. Stripping the "owner/" prefix off
+      # GITHUB_REPOSITORY avoids the "owner/owner/repo" bug that a naive
+      # ${{ github.event.repository.name || github.repository }} fallback
+      # would produce. Written to GITHUB_ENV so it's just CALENDAR_HOST in
+      # every later step, host+path only, no scheme, no trailing slash.
+      - name: Compute calendar host
+        run: echo "CALENDAR_HOST=${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}" >> "$GITHUB_ENV"
+
+      - name: Build calendar
+        run: npm run build:calendar
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - id: deploy
+        uses: actions/deploy-pages@v4
