@@ -59,6 +59,17 @@ describe('classify — rule 1: Ajax in Europe is always required', () => {
       classify(fixture('uecl', AJAX, BODO, 'knockout-round-playoffs'), CONFIG),
     ).toBe('required')
   })
+
+  it('requires an Ajax European final, which rule 3b would otherwise mark optional', () => {
+    // Rule 3b admits any final on stage alone, ignoring club identity. Rule 1 must win.
+    expect(classify(fixture('uel', AJAX, BODO, 'final'), CONFIG)).toBe('required')
+    expect(classify(fixture('ucl', BODO, AJAX, 'final'), CONFIG)).toBe('required')
+  })
+
+  it('requires an Ajax quarter-final against a non-elite side, which 3c would exclude', () => {
+    // 3c needs >=1 elite club; rule 1 must not depend on that.
+    expect(classify(fixture('uecl', AJAX, BODO, 'quarterfinals'), CONFIG)).toBe('required')
+  })
 })
 
 describe('classify — rule 2: Ajax domestically depends on the opponent tier', () => {
@@ -112,10 +123,6 @@ describe('classify — rule 3: big European matches without Ajax', () => {
     expect(classify(fixture('ucl', SLAVIA, BODO, 'semifinals'), CONFIG)).toBe('excluded')
   })
 
-  it('marks a final between two non-elite clubs optional (3b)', () => {
-    expect(classify(fixture('ucl', SLAVIA, BODO, 'final'), CONFIG)).toBe('optional')
-  })
-
   it('marks a quarter-final optional with one elite club, elite at home (3c)', () => {
     expect(classify(fixture('ucl', BARCELONA, BODO, 'quarterfinals'), CONFIG)).toBe('optional')
   })
@@ -132,7 +139,7 @@ describe('classify — rule 3: big European matches without Ajax', () => {
     expect(classify(fixture('ucl', BARCELONA, BODO, 'league-phase'), CONFIG)).toBe('excluded')
   })
 
-  it('excludes those same clubs in the league phase', () => {
+  it('excludes two non-elite clubs in the league phase', () => {
     expect(classify(fixture('ucl', SLAVIA, BODO, 'league-phase'), CONFIG)).toBe('excluded')
   })
 
@@ -147,6 +154,20 @@ describe('classify — rule 3: big European matches without Ajax', () => {
     expect(classify(fixture('ucl', SLAVIA, BODO, 'final'), CONFIG)).toBe('optional')
     expect(classify(fixture('uel', SLAVIA, BODO, 'final'), CONFIG)).toBe('optional')
     expect(classify(fixture('uecl', SLAVIA, BODO, 'final'), CONFIG)).toBe('optional')
+  })
+
+  it('applies the elite rules in the Europa and Conference Leagues too, not just the Champions League', () => {
+    // 3a — two elite clubs, league phase, in each competition.
+    expect(classify(fixture('uel', BARCELONA, UNITED, 'league-phase'), CONFIG)).toBe('optional')
+    expect(classify(fixture('uecl', BARCELONA, UNITED, 'league-phase'), CONFIG)).toBe('optional')
+
+    // 3c — one elite club at the threshold, in each competition.
+    expect(classify(fixture('uel', BARCELONA, BODO, 'quarterfinals'), CONFIG)).toBe('optional')
+    expect(classify(fixture('uecl', BODO, BARCELONA, 'quarterfinals'), CONFIG)).toBe('optional')
+
+    // And the corresponding exclusions, so the above are not passing for the wrong reason.
+    expect(classify(fixture('uel', SLAVIA, BODO, 'quarterfinals'), CONFIG)).toBe('excluded')
+    expect(classify(fixture('uecl', BARCELONA, BODO, 'round-of-16'), CONFIG)).toBe('excluded')
   })
 
   it('respects a raised threshold', () => {
