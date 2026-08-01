@@ -73,8 +73,9 @@ export async function buildCalendar(deps: BuildDeps): Promise<BuildResult> {
     const count: CompetitionCount = {
       competition: id,
       fetched: rawEvents.length,
-      // Unmappable only — duplicates (possible where the two windows touch at 1 July)
-      // are silently skipped below, so the "every event dropped" signal stays meaningful.
+      // Unmappable only — duplicates (ESPN has been seen returning the same event in
+      // adjacent ranges, and a fixture can be rescheduled across a window boundary) are
+      // silently skipped below, so the "every event dropped" signal stays meaningful.
       dropped: rawEvents.length - mapped.length,
       required: 0,
       optional: 0,

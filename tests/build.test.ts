@@ -76,12 +76,13 @@ describe('buildCalendar', () => {
     const fetchEvents = fetcherFor({ [ERE]: [espnEvent('1', AJAX, FEYENOORD)] })
     await buildCalendar({ season: 2026, rawConfig: RAW, teamIds: TEAM_IDS, fetchEvents })
     const windows = fetchEvents.mock.calls.map((c) => `${c[0].from}-${c[0].to}`)
-    expect(windows).toContain('20260701-20270701')
-    expect(windows).toContain('20270701-20280701')
+    expect(windows).toContain('20260701-20270630')
+    expect(windows).toContain('20270701-20280630')
   })
 
   it('does not emit the same fixture twice when both windows return it', async () => {
-    // Two windows touching at 1 July could in principle both return one event.
+    // ESPN has been seen returning one event in adjacent ranges, and a fixture can be
+    // rescheduled across a window boundary.
     const dup = espnEvent('1', AJAX, FEYENOORD)
     const fetchEvents = vi.fn(async ({ code }: { code: string }) => (code === ERE ? [dup] : []))
     const result = await buildCalendar({
@@ -100,7 +101,7 @@ describe('buildCalendar', () => {
     await buildCalendar({ season: 2026, rawConfig: RAW, teamIds: TEAM_IDS, fetchEvents })
 
     expect(fetchEvents).toHaveBeenCalledWith(
-      expect.objectContaining({ from: '20260701', to: '20270701' }),
+      expect.objectContaining({ from: '20260701', to: '20270630' }),
     )
   })
 
