@@ -15,11 +15,19 @@ permissions:
   pages: write
   id-token: write
 
-# Never let two deploys race; queue instead of cancelling, so a scheduled
-# run cannot be dropped.
+# Never let two deploys race. Newer runs supersede older ones rather than
+# queueing behind them: the build is idempotent and hourly, so a superseded
+# run costs at most an hour of staleness, while a queue does not self-heal.
+# On 2026-08-06 a run wedged in the `waiting` state on the github-pages
+# environment gate (no reviewers, no wait timer — an orphaned run) and held
+# this group for ten days. GitHub keeps only one *pending* run per group, so
+# every hourly run after it queued and was then cancelled by its successor:
+# 158 cancellations, zero publishes. Superseding drains that wedge on the
+# next tick. Note that job-level timeout-minutes would not have helped —
+# timeouts do not apply while a job sits in `waiting`.
 concurrency:
   group: pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   publish:
