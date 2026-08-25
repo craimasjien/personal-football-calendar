@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { COMPETITION_IDS } from '../../src/domain.ts'
-import { COMPETITIONS, isEuropean } from '../../src/source/competitions.ts'
+import { COMPETITIONS, isDutchDomestic, isEuropean } from '../../src/source/competitions.ts'
 
 describe('COMPETITIONS', () => {
   it('covers every competition id', () => {
@@ -69,5 +69,34 @@ describe('isEuropean', () => {
   it('is false for the Johan Cruijff Schaal and friendlies', () => {
     expect(isEuropean('johan-cruijff-schaal')).toBe(false)
     expect(isEuropean('friendly')).toBe(false)
+  })
+})
+
+describe('isDutchDomestic', () => {
+  it('is true for the three Dutch domestic competitions', () => {
+    expect(isDutchDomestic('eredivisie')).toBe(true)
+    expect(isDutchDomestic('knvb-cup')).toBe(true)
+    expect(isDutchDomestic('johan-cruijff-schaal')).toBe(true)
+  })
+
+  it('is false for every European competition', () => {
+    expect(isDutchDomestic('ucl')).toBe(false)
+    expect(isDutchDomestic('uel')).toBe(false)
+    expect(isDutchDomestic('uecl')).toBe(false)
+    expect(isDutchDomestic('ucl-qual')).toBe(false)
+    expect(isDutchDomestic('uel-qual')).toBe(false)
+    expect(isDutchDomestic('uecl-qual')).toBe(false)
+  })
+
+  it('is false for friendlies, which cannot attest nationality', () => {
+    // `club.friendly` is worldwide: a club appearing there says nothing about
+    // where it is from, so harvesting Dutch identity from it would be wrong.
+    expect(isDutchDomestic('friendly')).toBe(false)
+  })
+
+  it('never overlaps with isEuropean', () => {
+    for (const id of COMPETITION_IDS) {
+      expect(isDutchDomestic(id) && isEuropean(id)).toBe(false)
+    }
   })
 })

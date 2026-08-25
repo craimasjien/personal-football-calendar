@@ -2,6 +2,7 @@ import type { RawConfig } from '../config/teams.ts'
 import { classify } from './classify.ts'
 import { resolveConfig } from './config.ts'
 import type { CalendarEntry, CompetitionId, Fixture } from './domain.ts'
+import { dutchClubIds } from './dutch-clubs.ts'
 import { assertPublishable } from './guards.ts'
 import { render } from './ics/render.ts'
 import { COMPETITIONS } from './source/competitions.ts'
@@ -38,6 +39,8 @@ export type BuildResult = {
   entries: CalendarEntry[]
   fixtures: Fixture[]
   counts: CompetitionCount[]
+  /** Clubs derived to be Dutch from this run's domestic fixtures. Diagnostic. */
+  dutchClubs: Set<number>
 }
 
 export async function buildCalendar(deps: BuildDeps): Promise<BuildResult> {
@@ -54,10 +57,14 @@ export async function buildCalendar(deps: BuildDeps): Promise<BuildResult> {
   const windows = [seasonWindow(season), seasonWindow(season + 1)]
 
   const fixtures: Fixture[] = []
-  const entries: CalendarEntry[] = []
   const counts: CompetitionCount[] = []
+  const countsByCompetition = new Map<CompetitionId, CompetitionCount>()
   const seenFixtureIds = new Set<string>()
 
+  // Pass 1 — fetch and map everything. Nothing is classified yet: whether a European
+  // fixture belongs in the calendar can depend on the Dutch domestic feeds (rule 3d),
+  // and those are not all in until this loop finishes. Classifying inside the loop
+  // would quietly make the answer depend on the order of the COMPETITIONS keys.
   for (const [id, meta] of Object.entries(COMPETITIONS) as Array<
     [CompetitionId, (typeof COMPETITIONS)[CompetitionId]]
   >) {
@@ -84,19 +91,31 @@ export async function buildCalendar(deps: BuildDeps): Promise<BuildResult> {
     for (const fixture of mapped) {
       if (seenFixtureIds.has(fixture.id)) continue
       seenFixtureIds.add(fixture.id)
-
       fixtures.push(fixture)
-      const inclusion = classify(fixture, config)
-      if (inclusion === 'excluded') continue
-      entries.push({ fixture, inclusion })
-      if (inclusion === 'required') count.required++
-      else count.optional++
     }
 
     counts.push(count)
+    countsByCompetition.set(id, count)
+  }
+
+  // Which clubs are Dutch is evidence, not configuration — read it off the domestic
+  // feeds now that all of them have been seen.
+  const dutchClubs = dutchClubIds(fixtures)
+
+  // Pass 2 — classify. `fixtures` is still in competition order, so entries come out
+  // grouped exactly as before; render emits them in array order without sorting.
+  const entries: CalendarEntry[] = []
+  for (const fixture of fixtures) {
+    const inclusion = classify(fixture, config, dutchClubs)
+    if (inclusion === 'excluded') continue
+    entries.push({ fixture, inclusion })
+    const count = countsByCompetition.get(fixture.competition)
+    if (count === undefined) continue
+    if (inclusion === 'required') count.required++
+    else count.optional++
   }
 
   assertPublishable({ fixtures, entries, myTeamId: config.myTeamId, counts })
 
-  return { ics: render(entries, config.displayNames), entries, fixtures, counts }
+  return { ics: render(entries, config.displayNames), entries, fixtures, counts, dutchClubs }
 }

@@ -38,12 +38,41 @@ what actually shows up in the calendar (`AFC Ajax`).
   against a nobody.
 - `displayNames` — maps ESPN's club name to the name shown in the calendar.
 
-Concretely, a big-European-competition match appears when any of these three
-hold: both clubs are elite (any stage); it's a final, in any of the three
-competitions; or the match is at or beyond `bigEuropeanStageFrom` **and** at
-least one club is elite. That last condition matters — without it, the
-threshold alone would admit Europa League and Conference League
-quarter-finals between clubs nobody asked about.
+Concretely, a European match appears when any of these four hold: **either club
+is Dutch** (any stage, any of the six UEFA competitions); both clubs are elite
+(any stage); it's a final, in any of the three competitions; or the match is at
+or beyond `bigEuropeanStageFrom` **and** at least one club is elite. That last
+condition matters — without it, the threshold alone would admit Europa League
+and Conference League quarter-finals between clubs nobody asked about.
+
+### Dutch clubs in Europe
+
+Any Dutch club playing any European fixture appears as `Optioneel:` — qualifying
+rounds (played in July), the play-off round, the league phase, the knockouts, the
+final. No tier applies and no stage threshold applies: the point is to see Dutch
+clubs in Europe at all, not only when the tie is a big one.
+
+**There is nothing to configure for this.** Which clubs are Dutch is derived at
+build time, not listed in `config/teams.ts`: every club appearing in the
+Eredivisie, the KNVB Beker or the Johan Cruijff Schaal is taken to be Dutch. That
+data is already fetched on every run, so a promoted side or a cup-run minnow is
+covered the first time it plays, with no edit and no `sync-teams`. The cup is
+what makes this reach past the Eredivisie's eighteen clubs into the Eerste
+Divisie and the amateur rounds.
+
+Friendlies are deliberately *not* evidence of nationality: `club.friendly` is
+worldwide, so counting it would mark any club that warmed up against a Dutch side
+as Dutch. It is also not a European competition, so a Dutch club's pre-season
+friendly does not appear on that basis.
+
+Ajax is unaffected. Rule 1 ("my team in Europe: always") is evaluated first, so
+Ajax's European matches stay required rather than being downgraded to
+`Optioneel:`, and its domestic rules are untouched.
+
+The derived set is only as complete as the fetch that produced it. That fails
+safe rather than silently: a thin domestic fetch can only make the calendar
+*miss* an optional match, never mislabel one, and `npm run build:calendar`
+prints how many Dutch clubs it derived so a collapse is visible in the CI log.
 
 After adding a club, run `npm run sync-teams` to refresh `config/team-ids.json`,
 then commit both files. The build fails loudly if a configured club has no ID.
@@ -68,6 +97,10 @@ Ten ESPN competitions are fetched, each for the current and next season window:
 The Johan Cruijff Schaal and friendlies are not European, so a match in either is
 only included via the domestic rule (opponent tier) when my team plays in it —
 never via rule 4, which is Eredivisie-only.
+
+The first three rows do double duty: besides supplying fixtures, they are the
+evidence for which clubs are Dutch (see above). Friendlies do not, being
+worldwide.
 
 ## Data source
 

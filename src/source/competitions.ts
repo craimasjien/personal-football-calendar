@@ -35,3 +35,23 @@ const EUROPEAN = new Set<CompetitionId>(['ucl', 'uel', 'uecl', 'ucl-qual', 'uel-
 export function isEuropean(id: CompetitionId): boolean {
   return EUROPEAN.has(id)
 }
+
+/**
+ * The Dutch domestic competitions — the ones that attest a club is Dutch.
+ *
+ * This is what `dutchClubIds` reads to decide nationality, so membership is a
+ * claim about the club, not just about the fixture. `friendly` is deliberately
+ * absent: `club.friendly` is worldwide, so a club appearing there tells us
+ * nothing about where it is from. The KNVB Beker is deliberately present — it
+ * reaches down into the amateur and Eerste Divisie sides, which is exactly the
+ * long tail that a hand-maintained club list would keep missing.
+ */
+const DUTCH_DOMESTIC = new Set<CompetitionId>([
+  'eredivisie',
+  'knvb-cup',
+  'johan-cruijff-schaal',
+])
+
+export function isDutchDomestic(id: CompetitionId): boolean {
+  return DUTCH_DOMESTIC.has(id)
+}

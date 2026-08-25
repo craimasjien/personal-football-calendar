@@ -12,9 +12,19 @@ function atOrBeyond(stage: Stage, threshold: Stage): boolean {
  *
  * Rules are evaluated in order; the first match wins. Rule 1 deliberately
  * precedes rule 2 so that every Ajax match in Europe is required regardless
- * of opponent or stage.
+ * of opponent or stage — and, since rule 3d would otherwise catch Ajax too,
+ * that ordering is now what keeps Ajax `required` rather than `optional`.
+ *
+ * `dutchClubs` is derived from fetched domestic fixtures rather than configured;
+ * see dutch-clubs.ts. It has no default on purpose: a silently-empty set would
+ * turn rule 3d off without failing anything, so an unwired call site should be a
+ * type error instead.
  */
-export function classify(fixture: Fixture, config: ResolvedConfig): Inclusion {
+export function classify(
+  fixture: Fixture,
+  config: ResolvedConfig,
+  dutchClubs: ReadonlySet<number>,
+): Inclusion {
   const { home, away, competition, stage } = fixture
   const involvesMyTeam = home.id === config.myTeamId || away.id === config.myTeamId
   const european = isEuropean(competition)
@@ -45,6 +55,13 @@ export function classify(fixture: Fixture, config: ResolvedConfig): Inclusion {
     // 3c — a late round needs at least one elite club. Without this the threshold
     // admits Europa/Conference quarter-finals between clubs nobody asked about.
     if (atOrBeyond(stage, config.bigEuropeanStageFrom) && eliteCount >= 1) return 'optional'
+
+    // 3d — any Dutch club, anywhere in Europe: qualifying rounds (played in July),
+    // the play-off round, the league phase, the knockouts, the final. No tier and no
+    // stage threshold applies, because the point is to see Dutch clubs in Europe at
+    // all, not only when the tie is a big one. Ajax never reaches here — rule 1 took
+    // it already — so this is every Dutch club *except* my own.
+    if (dutchClubs.has(home.id) || dutchClubs.has(away.id)) return 'optional'
 
     return 'excluded'
   }

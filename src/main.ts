@@ -54,6 +54,9 @@ async function run(): Promise<void> {
     )
   }
   console.log(`Total events: ${result.entries.length}`)
+  // A collapse here (0, or a handful) means the Dutch domestic feeds came back thin,
+  // which silently narrows rule 3d rather than failing. Worth seeing in the CI log.
+  console.log(`Dutch clubs derived from domestic fixtures: ${result.dutchClubs.size}`)
 
   // Written only after every guard has passed.
   mkdirSync(OUT_DIR, { recursive: true })

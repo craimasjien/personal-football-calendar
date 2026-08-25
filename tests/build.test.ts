@@ -276,3 +276,127 @@ describe('buildCalendar', () => {
     }
   })
 })
+
+describe('buildCalendar — Dutch clubs in Europe', () => {
+  const UECL_QUAL = COMPETITIONS['uecl-qual'].code
+  const UECL = COMPETITIONS.uecl.code
+  const CUP = COMPETITIONS['knvb-cup'].code
+  const FRIENDLY = COMPETITIONS.friendly.code
+
+  const SLAVIA = 9002 // not Dutch, not elite
+  const BODO = 9003 // not Dutch, not elite
+
+  it('marks a Dutch club optional in Europe, derived from its Eredivisie fixtures', async () => {
+    // CAMBUUR is in no configured tier and is not elite. Its only claim to a place
+    // in the calendar is that the Eredivisie feed shows it is Dutch.
+    const fetchEvents = fetcherFor({
+      [ERE]: [espnEvent('1', AJAX, CAMBUUR)],
+      [UECL_QUAL]: [espnEvent('2', CAMBUUR, BODO, 'first-round')],
+    })
+
+    const { entries, dutchClubs } = await buildCalendar({
+      season: 2025,
+      rawConfig: RAW,
+      teamIds: TEAM_IDS,
+      fetchEvents,
+    })
+
+    expect(dutchClubs).toContain(CAMBUUR)
+    const euro = entries.find((e) => e.fixture.id === '2')
+    expect(euro?.inclusion).toBe('optional')
+  })
+
+  it('derives Dutchness from the cup too, reaching clubs the Eredivisie never names', async () => {
+    const TELSTAR = 3735
+    const fetchEvents = fetcherFor({
+      [ERE]: [espnEvent('1', AJAX, FEYENOORD)],
+      [CUP]: [espnEvent('2', TELSTAR, AJAX)],
+      [UECL]: [espnEvent('3', TELSTAR, SLAVIA, 'league-phase')],
+    })
+
+    const { entries } = await buildCalendar({
+      season: 2025,
+      rawConfig: RAW,
+      teamIds: TEAM_IDS,
+      fetchEvents,
+    })
+
+    expect(entries.find((e) => e.fixture.id === '3')?.inclusion).toBe('optional')
+  })
+
+  it('does not treat a friendly opponent as Dutch', async () => {
+    // `club.friendly` is worldwide. If it counted, SLAVIA's own European tie would
+    // wrongly appear just because it warmed up against Ajax in July.
+    const fetchEvents = fetcherFor({
+      [ERE]: [espnEvent('1', AJAX, FEYENOORD)],
+      [FRIENDLY]: [espnEvent('2', AJAX, SLAVIA)],
+      [UECL]: [espnEvent('3', SLAVIA, BODO, 'league-phase')],
+    })
+
+    const { entries, dutchClubs } = await buildCalendar({
+      season: 2025,
+      rawConfig: RAW,
+      teamIds: TEAM_IDS,
+      fetchEvents,
+    })
+
+    expect(dutchClubs).not.toContain(SLAVIA)
+    expect(entries.find((e) => e.fixture.id === '3')).toBeUndefined()
+  })
+
+  it('leaves my own team required in Europe rather than optional', async () => {
+    const fetchEvents = fetcherFor({
+      [ERE]: [espnEvent('1', AJAX, FEYENOORD)],
+      [UECL_QUAL]: [espnEvent('2', AJAX, BODO, 'first-round')],
+    })
+
+    const { entries } = await buildCalendar({
+      season: 2025,
+      rawConfig: RAW,
+      teamIds: TEAM_IDS,
+      fetchEvents,
+    })
+
+    expect(entries.find((e) => e.fixture.id === '2')?.inclusion).toBe('required')
+  })
+
+  it('attributes the new optional entries to the right competition in the counts', async () => {
+    const fetchEvents = fetcherFor({
+      [ERE]: [espnEvent('1', AJAX, CAMBUUR)],
+      [UECL_QUAL]: [espnEvent('2', CAMBUUR, BODO, 'first-round')],
+    })
+
+    const { counts } = await buildCalendar({
+      season: 2025,
+      rawConfig: RAW,
+      teamIds: TEAM_IDS,
+      fetchEvents,
+    })
+
+    const uecl = counts.find((c) => c.competition === 'uecl-qual')
+    expect(uecl).toMatchObject({ fetched: 1, dropped: 0, required: 0, optional: 1 })
+  })
+
+  it('still groups entries by competition in COMPETITIONS order, so the ICS is unchanged', async () => {
+    // classify moved out of the fetch loop; entry order is what render emits, and
+    // render does not sort, so a reordering here would churn every published event.
+    const fetchEvents = fetcherFor({
+      [ERE]: [espnEvent('1', AJAX, CAMBUUR)],
+      [CUP]: [espnEvent('2', AJAX, CAMBUUR)],
+      [UECL_QUAL]: [espnEvent('3', CAMBUUR, BODO, 'first-round')],
+    })
+
+    const { entries } = await buildCalendar({
+      season: 2025,
+      rawConfig: RAW,
+      teamIds: TEAM_IDS,
+      fetchEvents,
+    })
+
+    expect(entries.map((e) => e.fixture.competition)).toEqual([
+      'eredivisie',
+      'knvb-cup',
+      'uecl-qual',
+    ])
+  })
+})
