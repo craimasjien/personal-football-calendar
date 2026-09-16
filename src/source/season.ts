@@ -13,24 +13,18 @@ export function seasonFor(now: Date): number {
 }
 
 /**
- * ESPN rejects any `dates=from-to` range longer than this with HTTP 400. Undocumented,
- * and verified against the live API: 20230701-20240630 (365 days) answers 200 while
- * 20230701-20240701 (366) answers 400, for every league code.
- */
-export const MAX_RANGE_DAYS = 365
-
-/**
  * The date range to ask ESPN for, in its YYYYMMDD format. 1 July to 30 June comfortably
  * brackets a European football season including early qualifiers and late finals.
  *
- * The window ends on 30 June rather than 1 July to stay inside MAX_RANGE_DAYS. A
- * 1-July-to-1-July window is 366 days whenever the season contains a leap day, and ESPN
- * answers 400 — which is what broke every build from 1 August 2026, the day `seasonFor`
- * started reporting 2026 and build.ts began asking for 20270701-20280701 (2028 being a
- * leap year). Ending on 30 June keeps every window at 364–365 days forever.
+ * This is a statement about the season, not about the request ESPN receives: espn.ts
+ * asks for whole calendar years and filters back down to this window, because ESPN
+ * withdrew the `dates=FROM-TO` range syntax altogether. An earlier version of this file
+ * ended the window on 30 June to stay under a 365-day range cap; that cap no longer
+ * governs anything, since no range is ever sent.
  *
- * Dropping 1 July loses no coverage: build.ts fetches consecutive seasons, and this
- * window's 30 June is immediately followed by the next one's 1 July.
+ * 30 June stays as the end anyway: build.ts fetches consecutive seasons, and this
+ * window's 30 June is immediately followed by the next one's 1 July, so they tile with
+ * neither gap nor overlap.
  */
 export function seasonWindow(season: number): { from: string; to: string } {
   return { from: `${season}0701`, to: `${season + 1}0630` }
