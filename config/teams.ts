@@ -2,6 +2,8 @@ import type { BigStageThreshold } from '../src/domain.ts'
 
 export type RawConfig = {
   myTeam: string
+  /** National team, ESPN spelling. Every one of its matches is required. */
+  myCountry: string
   eredivisie: { tier1: string[]; tier2: string[] }
   europeElite: string[]
   bigEuropeanStageFrom: BigStageThreshold
@@ -11,6 +13,7 @@ export type RawConfig = {
 
 export const rawConfig: RawConfig = {
   myTeam: 'Ajax Amsterdam',
+  myCountry: 'Netherlands',
 
   eredivisie: {
     tier1: ['Ajax Amsterdam', 'PSV Eindhoven', 'Feyenoord Rotterdam'],
@@ -49,5 +52,6 @@ export const rawConfig: RawConfig = {
     'Feyenoord Rotterdam': 'Feyenoord',
     'AZ Alkmaar': 'AZ',
     'PSV Eindhoven': 'PSV',
+    Netherlands: 'Nederland',
   },
 }

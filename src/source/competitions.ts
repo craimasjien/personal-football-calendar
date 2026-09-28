@@ -21,6 +21,17 @@ export const COMPETITIONS: Record<CompetitionId, { code: string; dutchName: stri
   'uel-qual': { code: 'uefa.europa_qual', dutchName: 'UEFA Europa League kwalificatie' },
   'uecl-qual': { code: 'uefa.europa.conf_qual', dutchName: 'UEFA Conference League kwalificatie' },
   friendly: { code: 'club.friendly', dutchName: 'Oefenwedstrijd' },
+  // National teams. Like the UEFA club qualifiers, each tournament's qualifying campaign
+  // lives under its own code — `fifa.worldq.uefa` is the UEFA zone of World Cup
+  // qualifying, which is the only zone the Netherlands can appear in. All six codes were
+  // confirmed live on 2026-09-28 (the empty ones return `{leagues: [...]}` with no
+  // `events`, exactly like a club competition between draws).
+  'world-cup': { code: 'fifa.world', dutchName: 'WK' },
+  'world-cup-qual': { code: 'fifa.worldq.uefa', dutchName: 'WK-kwalificatie' },
+  euro: { code: 'uefa.euro', dutchName: 'EK' },
+  'euro-qual': { code: 'uefa.euroq', dutchName: 'EK-kwalificatie' },
+  'nations-league': { code: 'uefa.nations', dutchName: 'Nations League' },
+  'international-friendly': { code: 'fifa.friendly', dutchName: 'Oefeninterland' },
 }
 
 /**
@@ -54,4 +65,27 @@ const DUTCH_DOMESTIC = new Set<CompetitionId>([
 
 export function isDutchDomestic(id: CompetitionId): boolean {
   return DUTCH_DOMESTIC.has(id)
+}
+
+/**
+ * National-team competitions — the ones rule 0 (my country: always) applies to.
+ *
+ * Deliberately disjoint from both sets above: an international fixture is neither
+ * European club football (so rules 3a-3d never see it) nor evidence that a side is a
+ * Dutch *club* (so `dutchClubIds` ignores it — the Netherlands playing Germany says
+ * nothing about Eredivisie membership). `international-friendly` is included even
+ * though `friendly` is worldwide noise, because the rule keys on my country's own
+ * id, not on who else appears in the feed.
+ */
+const INTERNATIONAL = new Set<CompetitionId>([
+  'world-cup',
+  'world-cup-qual',
+  'euro',
+  'euro-qual',
+  'nations-league',
+  'international-friendly',
+])
+
+export function isInternational(id: CompetitionId): boolean {
+  return INTERNATIONAL.has(id)
 }

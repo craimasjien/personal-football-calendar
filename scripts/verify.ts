@@ -40,7 +40,7 @@ async function run(): Promise<void> {
   console.log(`  ${result.dutchClubs.size} Dutch clubs derived from the domestic feeds`)
   for (const c of result.counts) {
     console.log(
-      `  ${c.competition.padEnd(20)} fetched=${c.fetched} dropped=${c.dropped}` +
+      `  ${c.competition.padEnd(22)} fetched=${c.fetched} dropped=${c.dropped}` +
         ` required=${c.required} optional=${c.optional}`,
     )
   }

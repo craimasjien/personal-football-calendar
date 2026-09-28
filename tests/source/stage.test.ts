@@ -21,6 +21,22 @@ describe('toStage', () => {
     expect(toStage('final')).toBe('final')
   })
 
+  it('recognises the slugs national-team competitions use', () => {
+    // Observed live under fifa.world 2026, uefa.euro 2024 and fifa.worldq.uefa 2025.
+    expect(toStage('group-stage')).toBe('group-stage')
+    expect(toStage('round-of-32')).toBe('round-of-32')
+    expect(toStage('3rd-place-match')).toBe('3rd-place-match')
+  })
+
+  it('falls back to regular-season for the national-team slugs it does not model', () => {
+    // uefa.nations carries 'relegation-playoffs'; fifa.worldq.uefa carries
+    // 'playoff-semifinals' and 'playoff-finals' for the March play-offs.
+    expect(toStage('relegation-playoffs')).toBe('regular-season')
+    expect(toStage('playoff-semifinals')).toBe('regular-season')
+    expect(toStage('playoff-finals')).toBe('regular-season')
+    expect(toStage('2026-international-friendly')).toBe('regular-season')
+  })
+
   it('falls back to regular-season for an unknown slug', () => {
     expect(toStage('some-new-uefa-format')).toBe('regular-season')
   })

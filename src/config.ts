@@ -6,6 +6,7 @@ export class UnknownTeamError extends Error {}
 
 export type ResolvedConfig = {
   myTeamId: number
+  myCountryId: number
   tier1: Set<number>
   tier2: Set<number>
   europeElite: Set<number>
@@ -41,6 +42,7 @@ export function resolveConfig(raw: RawConfig, ids: Record<string, number>): Reso
 
   const resolved: ResolvedConfig = {
     myTeamId: idFor(raw.myTeam),
+    myCountryId: idFor(raw.myCountry),
     tier1: toIdSet(raw.eredivisie.tier1),
     tier2: toIdSet(raw.eredivisie.tier2),
     europeElite: toIdSet(raw.europeElite),

@@ -101,6 +101,22 @@ describe('describe', () => {
     expect(describeFixture(fixture('knvb-cup', 'second-round'))).toBe('KNVB Beker · Tweede ronde')
   })
 
+  it('uses Dutch labels for the tournament-only stages', () => {
+    expect(describeFixture(fixture('world-cup', 'group-stage'))).toBe('WK · Groepsfase')
+    expect(describeFixture(fixture('world-cup', 'round-of-32'))).toBe('WK · Zestiende finale')
+    expect(describeFixture(fixture('world-cup', '3rd-place-match'))).toBe('WK · Troostfinale')
+    expect(describeFixture(fixture('euro', 'final'))).toBe('EK · Finale')
+    expect(describeFixture(fixture('nations-league', 'league-phase'))).toBe(
+      'Nations League · Competitiefase',
+    )
+  })
+
+  it('describes an international friendly by competition name alone, no round', () => {
+    // fifa.friendly carries a slug like '2026-international-friendly', not in STAGES.
+    const f = fixture('international-friendly', toStage('2026-international-friendly'))
+    expect(describeFixture(f)).toBe('Oefeninterland')
+  })
+
   it('appends the leg for a two-legged tie', () => {
     expect(describeFixture(fixture('ucl', 'quarterfinals', 1))).toBe(
       'UEFA Champions League · Kwartfinale · Heenwedstrijd',

@@ -14,11 +14,12 @@ type RawEvent = {
   }>
 }
 
-/** Every club name referenced anywhere in the config. */
+/** Every club and country name referenced anywhere in the config. */
 function configuredNames(): string[] {
   return [
     ...new Set([
       rawConfig.myTeam,
+      rawConfig.myCountry,
       ...rawConfig.eredivisie.tier1,
       ...rawConfig.eredivisie.tier2,
       ...rawConfig.europeElite,

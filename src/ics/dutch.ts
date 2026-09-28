@@ -10,14 +10,17 @@ const OPTIONAL_PREFIX = 'Optioneel: '
 const DUTCH_STAGE: Record<Stage, string | null> = {
   'regular-season': null,
   'league-phase': 'Competitiefase',
+  'group-stage': 'Groepsfase',
   'first-round': 'Eerste ronde',
   'second-round': 'Tweede ronde',
   'third-round': 'Derde ronde',
   'playoff-round': 'Play-offronde',
   'knockout-round-playoffs': 'Tussenronde',
+  'round-of-32': 'Zestiende finale',
   'round-of-16': 'Achtste finale',
   quarterfinals: 'Kwartfinale',
   semifinals: 'Halve finale',
+  '3rd-place-match': 'Troostfinale',
   final: 'Finale',
 }
 

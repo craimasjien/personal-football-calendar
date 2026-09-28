@@ -50,6 +50,17 @@ describe('STAGES', () => {
     expect(new Set(STAGES).size).toBe(STAGES.length)
   })
 
+  it('orders the tournament stages among the club ones', () => {
+    // 'group-stage' is a league phase by another name and must sit below every knockout
+    // round; 'round-of-32' precedes the round of 16; the third-place match is played the
+    // day before the final.
+    expect(STAGES.indexOf('group-stage')).toBeLessThan(STAGES.indexOf('first-round'))
+    expect(STAGES.indexOf('round-of-32')).toBeLessThan(STAGES.indexOf('round-of-16'))
+    expect(STAGES.indexOf('round-of-32')).toBeGreaterThan(STAGES.indexOf('knockout-round-playoffs'))
+    expect(STAGES.indexOf('3rd-place-match')).toBeGreaterThan(STAGES.indexOf('semifinals'))
+    expect(STAGES.indexOf('3rd-place-match')).toBeLessThan(STAGES.indexOf('final'))
+  })
+
   it('includes the two UEFA-qualifying-only stages', () => {
     expect(STAGES).toContain('third-round')
     expect(STAGES).toContain('playoff-round')
@@ -87,6 +98,8 @@ describe('BigStageThreshold', () => {
     const flood: BigStageThreshold = 'league-phase'
     // @ts-expect-error 'regular-season' would admit every European fixture
     const worse: BigStageThreshold = 'regular-season'
-    expect([flood, worse]).toEqual(['league-phase', 'regular-season'])
+    // @ts-expect-error 'group-stage' is a league phase by another name
+    const tournament: BigStageThreshold = 'group-stage'
+    expect([flood, worse, tournament]).toEqual(['league-phase', 'regular-season', 'group-stage'])
   })
 })

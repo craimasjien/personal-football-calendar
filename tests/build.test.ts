@@ -6,16 +6,23 @@ import { COMPETITIONS } from '../src/source/competitions.ts'
 const AJAX = 139
 const FEYENOORD = 142
 const CAMBUUR = 3736
+const NETHERLANDS = 449
+const GERMANY = 481
 
 const RAW: RawConfig = {
   myTeam: 'Ajax Amsterdam',
+  myCountry: 'Netherlands',
   eredivisie: { tier1: ['Ajax Amsterdam', 'Feyenoord Rotterdam'], tier2: [] },
   europeElite: [],
   bigEuropeanStageFrom: 'quarterfinals',
   displayNames: { 'Ajax Amsterdam': 'AFC Ajax' },
 }
 
-const TEAM_IDS = { 'Ajax Amsterdam': AJAX, 'Feyenoord Rotterdam': FEYENOORD }
+const TEAM_IDS = {
+  'Ajax Amsterdam': AJAX,
+  'Feyenoord Rotterdam': FEYENOORD,
+  Netherlands: NETHERLANDS,
+}
 
 // ESPN's displayName is the same string used as a key in RAW.displayNames for
 // known clubs (that's how the pipeline maps provider name -> calendar name),
@@ -23,6 +30,7 @@ const TEAM_IDS = { 'Ajax Amsterdam': AJAX, 'Feyenoord Rotterdam': FEYENOORD }
 const TEAM_NAMES: Record<number, string> = {
   [AJAX]: 'Ajax Amsterdam',
   [FEYENOORD]: 'Feyenoord Rotterdam',
+  [NETHERLANDS]: 'Netherlands',
 }
 
 function espnEvent(id: string, homeId: number, awayId: number, slug = 'regular-season') {
@@ -263,7 +271,7 @@ describe('buildCalendar', () => {
     expect(result.entries.find((e) => e.fixture.id === '2')!.inclusion).toBe('required')
   })
 
-  it('fetches exactly the ten configured competition codes, each for both windows', async () => {
+  it('fetches exactly the sixteen configured competition codes, each for both windows', async () => {
     const fetchEvents = fetcherFor({ [ERE]: [espnEvent('1', AJAX, FEYENOORD)] })
     await buildCalendar({ season: 2025, rawConfig: RAW, teamIds: TEAM_IDS, fetchEvents })
 
@@ -274,6 +282,84 @@ describe('buildCalendar', () => {
     for (const code of expectedCodes) {
       expect(codes.filter((c) => c === code)).toHaveLength(2)
     }
+  })
+})
+
+describe('buildCalendar — the Netherlands', () => {
+  const WCQ = COMPETITIONS['world-cup-qual'].code
+  const NATIONS = COMPETITIONS['nations-league'].code
+  const INT_FRIENDLY = COMPETITIONS['international-friendly'].code
+  const UECL = COMPETITIONS.uecl.code
+  const SPAIN = 164
+
+  it('requires every Netherlands match and excludes the rest of the feed', async () => {
+    const fetchEvents = fetcherFor({
+      [ERE]: [espnEvent('1', AJAX, FEYENOORD)],
+      [WCQ]: [
+        espnEvent('2', NETHERLANDS, GERMANY, 'group-stage'),
+        espnEvent('3', GERMANY, SPAIN, 'group-stage'),
+      ],
+      [NATIONS]: [espnEvent('4', SPAIN, NETHERLANDS, 'league-phase')],
+      [INT_FRIENDLY]: [espnEvent('5', NETHERLANDS, SPAIN, '2026-international-friendly')],
+    })
+
+    const { entries, counts } = await buildCalendar({
+      season: 2025,
+      rawConfig: RAW,
+      teamIds: TEAM_IDS,
+      fetchEvents,
+    })
+
+    const inclusionOf = (id: string) => entries.find((e) => e.fixture.id === id)?.inclusion
+    expect(inclusionOf('2')).toBe('required')
+    expect(inclusionOf('3')).toBeUndefined()
+    expect(inclusionOf('4')).toBe('required')
+    expect(inclusionOf('5')).toBe('required')
+
+    expect(counts.find((c) => c.competition === 'world-cup-qual')).toMatchObject({
+      fetched: 2,
+      dropped: 0,
+      required: 1,
+      optional: 0,
+    })
+  })
+
+  it('does not derive an opponent nation as a Dutch club', async () => {
+    // GERMANY (a nation) meets the Netherlands in a qualifier. If international feeds
+    // counted as domestic evidence, its id would then admit a European club tie.
+    const fetchEvents = fetcherFor({
+      [ERE]: [espnEvent('1', AJAX, FEYENOORD)],
+      [WCQ]: [espnEvent('2', NETHERLANDS, GERMANY, 'group-stage')],
+      [UECL]: [espnEvent('3', GERMANY, 9003, 'league-phase')],
+    })
+
+    const { entries, dutchClubs } = await buildCalendar({
+      season: 2025,
+      rawConfig: RAW,
+      teamIds: TEAM_IDS,
+      fetchEvents,
+    })
+
+    expect(dutchClubs).not.toContain(GERMANY)
+    expect(entries.find((e) => e.fixture.id === '3')).toBeUndefined()
+  })
+
+  it('renders the country through displayNames like any club, with no Optioneel prefix', async () => {
+    const fetchEvents = fetcherFor({
+      [ERE]: [espnEvent('1', AJAX, FEYENOORD)],
+      [WCQ]: [espnEvent('2', NETHERLANDS, GERMANY, 'group-stage')],
+    })
+    const withName = { ...RAW, displayNames: { ...RAW.displayNames, Netherlands: 'Nederland' } }
+
+    const { ics } = await buildCalendar({
+      season: 2025,
+      rawConfig: withName,
+      teamIds: TEAM_IDS,
+      fetchEvents,
+    })
+
+    expect(ics).toContain('SUMMARY:Nederland vs. t481')
+    expect(ics).toContain('DESCRIPTION:WK-kwalificatie · Groepsfase')
   })
 })
 

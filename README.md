@@ -6,6 +6,9 @@ hourly by GitHub Actions and served from GitHub Pages.
 Matches I will definitely watch appear as-is. Matches I would like to watch are
 prefixed `Optioneel:`.
 
+Two teams are "mine": Ajax, whose matches are required or `Optioneel:` by the
+rules below, and the Netherlands, whose matches are always required.
+
 ## Subscribing
 
 Open the Pages URL on the phone and tap **Abonneren op iPhone**, or add the
@@ -20,6 +23,14 @@ Edit `config/teams.ts`. Club names must match ESPN's spelling exactly
 (`Ajax Amsterdam`, not `Ajax`) — `displayNames` is what maps that ESPN name to
 what actually shows up in the calendar (`AFC Ajax`).
 
+- `myCountry` — the national team (`Netherlands`, ESPN's spelling; shown as
+  `Nederland` via `displayNames`). Every one of its matches is required: World
+  Cup and Euros, their qualifiers, the Nations League, and international
+  friendlies. There is no opponent tier and no stage threshold for nations —
+  Malta at home is as required as Germany away. This rule runs before any club
+  rule and only ever looks at the six national-team competitions, so a World Cup
+  final without the Netherlands stays out rather than being mistaken for a
+  European final.
 - `eredivisie.tier1` / `tier2` — Ajax matches against these clubs are required;
   against anyone else they are `Optioneel:`. Two tier-1 clubs playing each other
   appear as `Optioneel:` even without Ajax.
@@ -69,6 +80,10 @@ Ajax is unaffected. Rule 1 ("my team in Europe: always") is evaluated first, so
 Ajax's European matches stay required rather than being downgraded to
 `Optioneel:`, and its domestic rules are untouched.
 
+Nations are never mistaken for Dutch clubs: the national-team competitions are
+not domestic evidence, so Germany meeting the Netherlands in a qualifier does not
+make Germany's id admit a European club tie.
+
 The derived set is only as complete as the fetch that produced it. That fails
 safe rather than silently: a thin domestic fetch can only make the calendar
 *miss* an optional match, never mislabel one, and `npm run build:calendar`
@@ -79,7 +94,8 @@ then commit both files. The build fails loudly if a configured club has no ID.
 
 ## Competitions
 
-Ten ESPN competitions are fetched, each for the current and next season window:
+Sixteen ESPN competitions are fetched, each for the current and next season
+window — ten for club football and six for the national team:
 
 | Competition | ESPN code | European? |
 |---|---|---|
@@ -93,6 +109,12 @@ Ten ESPN competitions are fetched, each for the current and next season window:
 | UEFA Europa League kwalificatie | `uefa.europa_qual` | yes |
 | UEFA Conference League kwalificatie | `uefa.europa.conf_qual` | yes |
 | Oefenwedstrijd (friendlies) | `club.friendly` | no |
+| WK | `fifa.world` | no (international) |
+| WK-kwalificatie | `fifa.worldq.uefa` | no (international) |
+| EK | `uefa.euro` | no (international) |
+| EK-kwalificatie | `uefa.euroq` | no (international) |
+| Nations League | `uefa.nations` | no (international) |
+| Oefeninterland (international friendlies) | `fifa.friendly` | no (international) |
 
 The Johan Cruijff Schaal and friendlies are not European, so a match in either is
 only included via the domestic rule (opponent tier) when my team plays in it —
@@ -100,7 +122,16 @@ never via rule 4, which is Eredivisie-only.
 
 The first three rows do double duty: besides supplying fixtures, they are the
 evidence for which clubs are Dutch (see above). Friendlies do not, being
-worldwide.
+worldwide, and neither do the six national-team rows.
+
+The six national-team competitions exist only to find the Netherlands' matches.
+Nothing else in them is ever included. As with the UEFA club qualifiers, each
+tournament's qualifying campaign is filed under its own code; World Cup
+qualifying is further split by confederation, and `fifa.worldq.uefa` is the only
+zone the Netherlands can appear in. Between campaigns some of these feeds return
+no events at all (the Euro codes were empty when this was added, ahead of the
+2028 qualifiers); that is the same "nothing scheduled yet" state a club
+competition shows between draws, not an error.
 
 ## Data source
 

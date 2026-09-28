@@ -13,9 +13,14 @@ const BARCELONA = 83 // elite
 const UNITED = 360 // elite
 const SLAVIA = 9002 // not elite
 const BODO = 9003 // not elite
+const NETHERLANDS = 449
+const GERMANY = 481
+const SPAIN = 164
+const MALTA = 453
 
 const CONFIG: ResolvedConfig = {
   myTeamId: AJAX,
+  myCountryId: NETHERLANDS,
   tier1: new Set([AJAX, PSV, FEYENOORD]),
   tier2: new Set([TWENTE]),
   europeElite: new Set([BARCELONA, UNITED]),
@@ -46,6 +51,56 @@ function fixture(
     kickoff: { kind: 'confirmed', utc: new Date('2026-03-15T13:30:00Z') },
   }
 }
+
+describe('classify — rule 0: the Netherlands are always required', () => {
+  it('requires a World Cup group match', () => {
+    expect(classify(fixture('world-cup', NETHERLANDS, GERMANY, 'group-stage'), CONFIG, NO_DUTCH)).toBe('required')
+  })
+
+  it('requires a World Cup qualifier against a minnow', () => {
+    // No opponent tier exists for nations: Malta at home is as required as Germany.
+    expect(classify(fixture('world-cup-qual', NETHERLANDS, MALTA, 'group-stage'), CONFIG, NO_DUTCH)).toBe('required')
+  })
+
+  it('requires a Euro match and a Euro qualifier', () => {
+    expect(classify(fixture('euro', NETHERLANDS, SPAIN, 'round-of-16'), CONFIG, NO_DUTCH)).toBe('required')
+    expect(classify(fixture('euro-qual', MALTA, NETHERLANDS, 'group-stage'), CONFIG, NO_DUTCH)).toBe('required')
+  })
+
+  it('requires a Nations League match in the league phase, not only the knockouts', () => {
+    expect(classify(fixture('nations-league', NETHERLANDS, GERMANY, 'league-phase'), CONFIG, NO_DUTCH)).toBe('required')
+    expect(classify(fixture('nations-league', SPAIN, NETHERLANDS, 'semifinals'), CONFIG, NO_DUTCH)).toBe('required')
+  })
+
+  it('requires an international friendly, unlike a club friendly', () => {
+    // "Non-optional, like Ajax" — but stricter than Ajax, whose friendlies go by tier.
+    expect(classify(fixture('international-friendly', NETHERLANDS, MALTA), CONFIG, NO_DUTCH)).toBe('required')
+  })
+
+  it('applies when the Netherlands are the away side', () => {
+    expect(classify(fixture('world-cup-qual', GERMANY, NETHERLANDS, 'group-stage'), CONFIG, NO_DUTCH)).toBe('required')
+  })
+
+  it('excludes an international match without the Netherlands, even a final', () => {
+    // Rule 3b admits any European *club* final; a World Cup final must not ride on it.
+    expect(classify(fixture('world-cup', GERMANY, SPAIN, 'final'), CONFIG, NO_DUTCH)).toBe('excluded')
+    expect(classify(fixture('euro', GERMANY, SPAIN, 'final'), CONFIG, NO_DUTCH)).toBe('excluded')
+    expect(classify(fixture('nations-league', GERMANY, SPAIN, 'league-phase'), CONFIG, NO_DUTCH)).toBe('excluded')
+    expect(classify(fixture('international-friendly', GERMANY, SPAIN), CONFIG, NO_DUTCH)).toBe('excluded')
+  })
+
+  it('does not treat a nation appearing in a club feed as my country', () => {
+    // Rule 0 is anchored on the competition, so a stray id in a club competition falls
+    // through to the club rules and is excluded there.
+    expect(classify(fixture('friendly', NETHERLANDS, CAMBUUR), CONFIG, NO_DUTCH)).toBe('excluded')
+  })
+
+  it('does not let the Dutch-club set widen rule 0', () => {
+    // Being Dutch is about clubs in Europe (rule 3d); nations are matched by id only.
+    const dutch = new Set([GERMANY])
+    expect(classify(fixture('world-cup', GERMANY, SPAIN, 'group-stage'), CONFIG, dutch)).toBe('excluded')
+  })
+})
 
 describe('classify — rule 1: Ajax in Europe is always required', () => {
   it('includes an Ajax Champions League league-phase match', () => {

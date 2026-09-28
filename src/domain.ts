@@ -13,6 +13,7 @@
 export const STAGES = [
   'regular-season',
   'league-phase',
+  'group-stage', // World Cup, Euros and their qualifiers — a league phase by another name
   'first-round',
   'second-round',
   'third-round', // UEFA qualifying
@@ -20,9 +21,11 @@ export const STAGES = [
   // 'knockout-round-playoffs' below, which is the main competition's own
   // February play-off round. Two genuinely different rounds; do not merge them.
   'knockout-round-playoffs', // main competition, February
+  'round-of-32', // 48-team World Cup only
   'round-of-16',
   'quarterfinals',
   'semifinals',
+  '3rd-place-match', // World Cup and Nations League; played the day before the final
   'final',
 ] as const
 export type Stage = (typeof STAGES)[number]
@@ -30,12 +33,12 @@ export type Stage = (typeof STAGES)[number]
 /**
  * Stages that may serve as the "big European match" threshold.
  *
- * 'regular-season' and 'league-phase' are excluded deliberately: they sit at the
- * bottom of the scale, so using either as the threshold would admit every European
- * fixture and flood the calendar. Excluding them at the type level also preserves
- * the safety of toStage()'s 'regular-season' fallback for unknown slugs.
+ * 'regular-season', 'league-phase' and 'group-stage' are excluded deliberately: they
+ * sit at the bottom of the scale, so using any of them as the threshold would admit
+ * every European fixture and flood the calendar. Excluding them at the type level also
+ * preserves the safety of toStage()'s 'regular-season' fallback for unknown slugs.
  */
-export type BigStageThreshold = Exclude<Stage, 'regular-season' | 'league-phase'>
+export type BigStageThreshold = Exclude<Stage, 'regular-season' | 'league-phase' | 'group-stage'>
 
 export const COMPETITION_IDS = [
   'eredivisie',
@@ -48,6 +51,13 @@ export const COMPETITION_IDS = [
   'uel-qual',
   'uecl-qual',
   'friendly',
+  // National-team competitions, all fetched for the Netherlands (see classify.ts rule 0).
+  'world-cup',
+  'world-cup-qual',
+  'euro',
+  'euro-qual',
+  'nations-league',
+  'international-friendly',
 ] as const
 export type CompetitionId = (typeof COMPETITION_IDS)[number]
 

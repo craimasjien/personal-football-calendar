@@ -4,6 +4,7 @@ import { UnknownTeamError, loadTeamIds, resolveConfig } from '../src/config.ts'
 
 const RAW: RawConfig = {
   myTeam: 'Ajax Amsterdam',
+  myCountry: 'Netherlands',
   eredivisie: { tier1: ['Ajax Amsterdam', 'Feyenoord Rotterdam'], tier2: ['AZ Alkmaar'] },
   europeElite: ['Barcelona'],
   bigEuropeanStageFrom: 'quarterfinals',
@@ -15,12 +16,14 @@ const IDS = {
   'Feyenoord Rotterdam': 142,
   'AZ Alkmaar': 140,
   Barcelona: 83,
+  Netherlands: 449,
 }
 
 describe('resolveConfig', () => {
   it('resolves every configured name to its provider id', () => {
     const c = resolveConfig(RAW, IDS)
     expect(c.myTeamId).toBe(139)
+    expect(c.myCountryId).toBe(449)
     expect([...c.tier1].sort((a, b) => a - b)).toEqual([139, 142])
     expect([...c.tier2]).toEqual([140])
     expect([...c.europeElite]).toEqual([83])
@@ -48,12 +51,20 @@ describe('resolveConfig', () => {
   it('throws when myTeam itself cannot be resolved', () => {
     expect(() => resolveConfig({ ...RAW, myTeam: 'Nobody' }, IDS)).toThrow(UnknownTeamError)
   })
+
+  it('throws when myCountry cannot be resolved', () => {
+    expect(() => resolveConfig({ ...RAW, myCountry: 'Holland' }, IDS)).toThrow(/Holland/)
+  })
 })
 
 describe('loadTeamIds', () => {
   it('reads the committed mapping and includes Ajax', () => {
     const ids = loadTeamIds()
     expect(ids['Ajax Amsterdam']).toBe(139)
+  })
+
+  it('includes the Netherlands', () => {
+    expect(loadTeamIds().Netherlands).toBe(449)
   })
 
   it('maps every name to a number', () => {
