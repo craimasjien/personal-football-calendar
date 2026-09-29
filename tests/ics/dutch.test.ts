@@ -54,6 +54,26 @@ describe('summary', () => {
       }),
     ).toBe('Telstar vs. Excelsior')
   })
+
+  it('translates country names in national-team competitions', () => {
+    expect(
+      summary(entry(fixture('world-cup-qual', 'group-stage', null, 'Greece', 'Netherlands'), 'required'), {}),
+    ).toBe('Griekenland vs. Nederland')
+  })
+
+  it('lets display-name overrides win over the country table', () => {
+    expect(
+      summary(entry(fixture('nations-league', 'group-stage', null, 'Germany', 'Netherlands'), 'required'), {
+        Netherlands: 'Oranje',
+      }),
+    ).toBe('Duitsland vs. Oranje')
+  })
+
+  it('does not translate country-like names in club competitions', () => {
+    expect(
+      summary(entry(fixture('friendly', 'regular-season', null, 'Georgia', 'Ajax Amsterdam'), 'required'), {}),
+    ).toBe('Georgia vs. Ajax Amsterdam')
+  })
 })
 
 describe('describe', () => {

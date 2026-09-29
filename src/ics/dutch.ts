@@ -1,5 +1,6 @@
 import type { CalendarEntry, Fixture, Stage } from '../domain.ts'
-import { COMPETITIONS } from '../source/competitions.ts'
+import { COMPETITIONS, isInternational } from '../source/competitions.ts'
+import { DUTCH_COUNTRY } from './countries.ts'
 
 const OPTIONAL_PREFIX = 'Optioneel: '
 
@@ -29,13 +30,18 @@ const DUTCH_LEG: Record<1 | 2, string> = {
   2: 'Returnwedstrijd',
 }
 
-function display(name: string, displayNames: Record<string, string>): string {
-  return displayNames[name] ?? name
+/**
+ * Configured overrides win. Otherwise a national team gets its Dutch country name —
+ * only in international competitions, so a club never collides with a country.
+ */
+function display(name: string, displayNames: Record<string, string>, international: boolean): string {
+  return displayNames[name] ?? (international ? DUTCH_COUNTRY[name] : undefined) ?? name
 }
 
 export function summary(entry: CalendarEntry, displayNames: Record<string, string>): string {
-  const { home, away } = entry.fixture
-  const title = `${display(home.name, displayNames)} vs. ${display(away.name, displayNames)}`
+  const { home, away, competition } = entry.fixture
+  const intl = isInternational(competition)
+  const title = `${display(home.name, displayNames, intl)} vs. ${display(away.name, displayNames, intl)}`
   return entry.inclusion === 'optional' ? `${OPTIONAL_PREFIX}${title}` : title
 }
 
